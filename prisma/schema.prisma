@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id            String     @id @default(uuid())
+  name          String
+  sku           String?
+  quantity      Int        @default(0)
+  ignoreRestock Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+  orders        Order[]
+
+  @@index([name])
+  @@index([sku])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  entityId  String
+  details   String
+  createdAt DateTime @default(now())
+
+  @@index([entityId])
+}
+
+model Order {
+  id           String   @id @default(uuid())
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  providerName String
+  expectedDate DateTime
+  quantity     Int
+  notes        String?
+  status       String   @default("PENDING")
+  createdAt    DateTime @default(now())
+  deletedAt    DateTime?
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

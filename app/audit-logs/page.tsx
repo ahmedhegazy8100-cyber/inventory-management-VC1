@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import "./../globals.css";
 
 interface AuditLog {
@@ -13,28 +13,14 @@ interface AuditLog {
 }
 
 export default function AuditLogsPage() {
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchAuditLogs = useCallback(async () => {
-    try {
+  const { data: auditLogs = [], isLoading: loading } = useQuery({
+    queryKey: ["audit-logs"],
+    queryFn: async () => {
       const res = await fetch("/api/audit-logs");
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setAuditLogs(data);
-      } else {
-        setAuditLogs([]);
-      }
-    } catch {
-      // silent fail for audit logs
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAuditLogs();
-  }, [fetchAuditLogs]);
+      if (!res.ok) throw new Error("Failed to load audit logs");
+      return res.json();
+    },
+  });
 
   return (
     <div className="container" style={{ paddingTop: 0 }}>
@@ -54,7 +40,7 @@ export default function AuditLogsPage() {
             </div>
           ) : (
             <div className="audit-list" style={{ maxHeight: "calc(100vh - 250px)" }}>
-              {auditLogs.map((log) => (
+              {auditLogs.map((log: AuditLog) => (
                 <div key={log.id} className="audit-item">
                   <span className={`audit-badge ${log.action.toLowerCase()}`}>
                     {log.action}

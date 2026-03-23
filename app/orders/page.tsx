@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import "./../globals.css";
 
 interface Product {
@@ -29,9 +30,7 @@ interface FormErrors {
 }
 
 export default function OrdersPage() {
-  const [suggestions, setSuggestions] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Order modal state
   const [activeSuggestion, setActiveSuggestion] = useState<Product | null>(null);
@@ -40,7 +39,6 @@ export default function OrdersPage() {
   const [formQuantity, setFormQuantity] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [submitting, setSubmitting] = useState(false);
 
   // Toast
   const [toast, setToast] = useState<{
@@ -53,54 +51,72 @@ export default function OrdersPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const fetchSuggestions = useCallback(async () => {
-    try {
+  // Queries
+  const { data: suggestions = [], isLoading: loadingSuggestions } = useQuery({
+    queryKey: ["suggestions"],
+    queryFn: async () => {
       const res = await fetch("/api/orders/suggestions");
-      const data = await res.json();
-      setSuggestions(data);
-    } catch {
-      showToast("Failed to load suggestions.", "error");
-    }
-  }, []);
+      if (!res.ok) throw new Error("Failed to load suggestions");
+      return res.json();
+    },
+  });
 
-  const fetchOrders = useCallback(async () => {
-    try {
+  const { data: orders = [], isLoading: loadingOrders } = useQuery({
+    queryKey: ["orders"],
+    queryFn: async () => {
       const res = await fetch("/api/orders");
-      const data = await res.json();
-      setOrders(data);
-    } catch {
-      showToast("Failed to load active orders.", "error");
-    }
-  }, []);
+      if (!res.ok) throw new Error("Failed to load orders");
+      return res.json();
+    },
+  });
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    await Promise.all([fetchSuggestions(), fetchOrders()]);
-    setLoading(false);
-  }, [fetchSuggestions, fetchOrders]);
+  const loading = loadingSuggestions || loadingOrders;
 
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
-
-  const handleIgnore = async (id: string) => {
-    try {
+  // Mutations
+  const ignoreMutation = useMutation({
+    mutationFn: async (id: string) => {
       const res = await fetch(`/api/products/${id}/ignore`, { method: "PATCH" });
-      if (res.ok) {
-        showToast("Suggestion ignored.");
-        fetchSuggestions();
-      } else {
-        showToast("Failed to ignore suggestion.", "error");
+      if (!res.ok) throw new Error("Failed to ignore suggestion");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["suggestions"] });
+      showToast("Suggestion ignored.");
+    },
+    onError: () => showToast("Failed to ignore suggestion.", "error"),
+  });
+
+  const placeOrderMutation = useMutation({
+    mutationFn: async (orderData: any) => {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw data.errors || { message: "Failed to place order" };
       }
-    } catch {
-      showToast("An error occurred.", "error");
-    }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders", "suggestions"] });
+      setActiveSuggestion(null);
+      showToast("Order placed successfully!");
+    },
+    onError: (err: any) => {
+      setFormErrors(err);
+      showToast("Failed to place order.", "error");
+    },
+  });
+
+  const handleIgnore = (id: string) => {
+    ignoreMutation.mutate(id);
   };
 
   const openOrderModal = (product: Product) => {
     setActiveSuggestion(product);
     setFormProviderName("");
-    // default date to tomorrow
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     setFormExpectedDate(tomorrow.toISOString().split("T")[0]);
@@ -127,34 +143,13 @@ export default function OrdersPage() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: activeSuggestion.id,
-          providerName: formProviderName.trim(),
-          expectedDate: formExpectedDate,
-          quantity: qty,
-          notes: formNotes.trim(),
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setFormErrors(data.errors || {});
-        return;
-      }
-
-      setActiveSuggestion(null);
-      fetchAll();
-      showToast("Order placed successfully!");
-    } catch {
-      showToast("Failed to place order.", "error");
-    } finally {
-      setSubmitting(false);
-    }
+    placeOrderMutation.mutate({
+      productId: activeSuggestion.id,
+      providerName: formProviderName.trim(),
+      expectedDate: formExpectedDate,
+      quantity: qty,
+      notes: formNotes.trim(),
+    });
   };
 
   return (
@@ -190,7 +185,7 @@ export default function OrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {suggestions.map((prod, i) => (
+                {suggestions.map((prod: Product, i: number) => (
                   <tr key={prod.id} style={{ animationDelay: `${i * 0.04}s` }}>
                     <td className="product-name">{prod.name}</td>
                     <td className="product-sku">{prod.sku || "—"}</td>
@@ -202,9 +197,10 @@ export default function OrdersPage() {
                         <button
                           className="btn-icon btn-danger"
                           onClick={() => handleIgnore(prod.id)}
+                          disabled={ignoreMutation.isPending}
                           title="Ignore this suggestion"
                         >
-                          ❌ Ignore
+                          {ignoreMutation.isPending ? "..." : "❌ Ignore"}
                         </button>
                         <button
                           className="btn-icon"
@@ -253,7 +249,7 @@ export default function OrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order, i) => (
+                {orders.map((order: Order, i: number) => (
                   <tr key={order.id} style={{ animationDelay: `${i * 0.04}s` }}>
                     <td>
                       <div className="product-name">{order.product.name}</div>
@@ -370,8 +366,8 @@ export default function OrdersPage() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-save" disabled={submitting}>
-                  {submitting ? "Placing Order..." : "Submit Order"}
+                <button type="submit" className="btn-save" disabled={placeOrderMutation.isPending}>
+                  {placeOrderMutation.isPending ? "Placing Order..." : "Submit Order"}
                 </button>
               </div>
             </form>

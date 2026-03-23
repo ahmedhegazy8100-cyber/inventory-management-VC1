@@ -1,6 +1,5 @@
-"use client";
-
 import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import "./globals.css";
 
 interface Product {
@@ -26,21 +25,17 @@ interface User {
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [loadingApp, setLoadingApp] = useState(true);
+  const queryClient = useQueryClient();
 
-  // Inventory state
-  const [products, setProducts] = useState<Product[]>([]);
+  // Inventory filter state
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
 
   // Form state (Add Product)
   const [formName, setFormName] = useState("");
   const [formSku, setFormSku] = useState("");
   const [formQuantity, setFormQuantity] = useState("0");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [adding, setAdding] = useState(false);
 
   // Edit modal
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -91,36 +86,92 @@ export default function Home() {
     }
   };
 
-  const fetchProducts = useCallback(async () => {
-    if (!user) return; // Only fetch if logged in
-    try {
-      setLoading(true);
+  // React Query: Fetch Products
+  const { data: result, isLoading: loading } = useQuery({
+    queryKey: ["products", search, page],
+    queryFn: async () => {
       const query = new URLSearchParams();
       if (search) query.set("search", search);
       query.set("page", String(page));
       query.set("limit", "10");
-
       const res = await fetch(`/api/products?${query.toString()}`);
-      const result = await res.json();
-      
-      setProducts(result.data);
-      setTotalPages(result.meta.totalPages);
-      setTotalProducts(result.meta.total);
-    } catch {
-      showToast("Failed to load products.", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [search, user, page]);
+      if (!res.ok) throw new Error("Failed to fetch products");
+      return res.json();
+    },
+    enabled: !!user,
+  });
 
-  useEffect(() => {
-    if (user) {
-      const debounce = setTimeout(() => {
-        fetchProducts();
-      }, 250);
-      return () => clearTimeout(debounce);
-    }
-  }, [fetchProducts, user]);
+  const products = result?.data || [];
+  const totalPages = result?.meta?.totalPages || 1;
+  const totalProducts = result?.meta?.total || 0;
+
+  // Mutations
+  const addMutation = useMutation({
+    mutationFn: async (newProduct: any) => {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newProduct),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw data.errors || { message: "Failed to add product" };
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      setFormName("");
+      setFormSku("");
+      setFormQuantity("0");
+      setFormErrors({});
+      showToast("Product added successfully!");
+    },
+    onError: (err: any) => {
+      setFormErrors(err);
+      showToast("Failed to add product.", "error");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await fetch(`/api/products/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw errorData.errors || { message: "Failed to update product" };
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      setEditProduct(null);
+      showToast("Product updated successfully!");
+    },
+    onError: (err: any) => {
+      setEditErrors(err);
+      showToast("Failed to update product.", "error");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete product");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      setDeleteProduct(null);
+      showToast("Product deleted.");
+    },
+    onError: () => {
+      showToast("Failed to delete product.", "error");
+    },
+  });
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,35 +188,11 @@ export default function Home() {
       return;
     }
 
-    setAdding(true);
-    try {
-      const res = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formName.trim(),
-          sku: formSku.trim() || null,
-          quantity: qty,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setFormErrors(data.errors || {});
-        return;
-      }
-
-      setFormName("");
-      setFormSku("");
-      setFormQuantity("0");
-      setFormErrors({});
-      fetchProducts();
-      showToast("Product added successfully!");
-    } catch {
-      showToast("Failed to add product.", "error");
-    } finally {
-      setAdding(false);
-    }
+    addMutation.mutate({
+      name: formName.trim(),
+      sku: formSku.trim() || null,
+      quantity: qty,
+    });
   };
 
   const openEdit = (product: Product) => {
@@ -191,75 +218,29 @@ export default function Home() {
       return;
     }
 
-    try {
-      const res = await fetch(`/api/products/${editProduct.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: editName.trim(),
-          sku: editSku.trim() || null,
-          quantity: qty,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setEditErrors(data.errors || {});
-        return;
-      }
-
-      setEditProduct(null);
-      fetchProducts();
-      showToast("Product updated successfully!");
-    } catch {
-      showToast("Failed to update product.", "error");
-    }
+    updateMutation.mutate({
+      id: editProduct.id,
+      data: {
+        name: editName.trim(),
+        sku: editSku.trim() || null,
+        quantity: qty,
+      },
+    });
   };
 
   const handleDelete = async () => {
     if (!deleteProduct) return;
-
-    try {
-      await fetch(`/api/products/${deleteProduct.id}`, { method: "DELETE" });
-      setDeleteProduct(null);
-      fetchProducts();
-      showToast("Product deleted.");
-    } catch {
-      showToast("Failed to delete product.", "error");
-    }
+    deleteMutation.mutate(deleteProduct.id);
   };
 
   const handleInlineQuantityChange = async (product: Product, delta: number) => {
     const newQty = product.quantity + delta;
     if (newQty < 0) return;
 
-    setProducts((prev) =>
-      prev.map((p) => (p.id === product.id ? { ...p, quantity: newQty } : p))
-    );
-
-    try {
-      const res = await fetch(`/api/products/${product.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity: newQty }),
-      });
-
-      if (!res.ok) {
-        setProducts((prev) =>
-          prev.map((p) =>
-            p.id === product.id ? { ...p, quantity: product.quantity } : p
-          )
-        );
-        showToast("Failed to update quantity.", "error");
-      }
-    } catch {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === product.id ? { ...p, quantity: product.quantity } : p
-        )
-      );
-      showToast("Failed to update quantity.", "error");
-    }
+    updateMutation.mutate({
+      id: product.id,
+      data: { quantity: newQty },
+    });
   };
 
   const getStockClass = (qty: number) => {
@@ -341,10 +322,10 @@ export default function Home() {
             <button
               type="submit"
               className="btn-add"
-              disabled={adding}
+              disabled={addMutation.isPending}
               id="btn-add-product"
             >
-              {adding ? "Adding..." : "Add"}
+              {addMutation.isPending ? "Adding..." : "Add"}
             </button>
           </div>
         </form>
@@ -404,7 +385,7 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((product, i) => (
+                    {products.map((product: Product, i: number) => (
                       <tr
                         key={product.id}
                         style={{ animationDelay: `${i * 0.04}s` }}
@@ -541,8 +522,8 @@ export default function Home() {
               >
                 Cancel
               </button>
-              <button className="btn-save" onClick={handleEdit}>
-                Save Changes
+              <button className="btn-save" onClick={handleEdit} disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </div>
@@ -568,11 +549,12 @@ export default function Home() {
               <button
                 className="btn-cancel"
                 onClick={() => setDeleteProduct(null)}
+                disabled={deleteMutation.isPending}
               >
                 Cancel
               </button>
-              <button className="btn-delete-confirm" onClick={handleDelete}>
-                Delete
+              <button className="btn-delete-confirm" onClick={handleDelete} disabled={deleteMutation.isPending}>
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

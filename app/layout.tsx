@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: "Manage your products and stock levels with ease.",
 };
 
+import Providers from "./Providers";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -19,27 +21,29 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body>
-        {isAuthenticated ? (
-          <div className="app-wrapper">
-            <aside className="sidebar">
-              <div className="sidebar-header">
-                <h1>📦 Inventory</h1>
-              </div>
-              <nav className="side-nav">
-                <Link href="/" className="side-nav-item">Inventory</Link>
-                <Link href="/orders" className="side-nav-item">Orders</Link>
-                <Link href="/audit-logs" className="side-nav-item">Audit Logs</Link>
-              </nav>
-            </aside>
-            <main className="main-content">
+        <Providers>
+          {isAuthenticated ? (
+            <div className="app-wrapper">
+              <aside className="sidebar">
+                <div className="sidebar-header">
+                  <h1>📦 Inventory</h1>
+                </div>
+                <nav className="side-nav">
+                  <Link href="/" className="side-nav-item">Inventory</Link>
+                  <Link href="/orders" className="side-nav-item">Orders</Link>
+                  <Link href="/audit-logs" className="side-nav-item">Audit Logs</Link>
+                </nav>
+              </aside>
+              <main className="main-content">
+                {children}
+              </main>
+            </div>
+          ) : (
+            <div style={{ minHeight: "100vh" }}>
               {children}
-            </main>
-          </div>
-        ) : (
-          <div style={{ minHeight: "100vh" }}>
-            {children}
-          </div>
-        )}
+            </div>
+          )}
+        </Providers>
       </body>
     </html>
   );

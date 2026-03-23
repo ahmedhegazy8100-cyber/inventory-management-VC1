@@ -31,6 +31,9 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
 
   // Form state (Add Product)
   const [formName, setFormName] = useState("");
@@ -91,16 +94,24 @@ export default function Home() {
   const fetchProducts = useCallback(async () => {
     if (!user) return; // Only fetch if logged in
     try {
-      const params = search ? `?search=${encodeURIComponent(search)}` : "";
-      const res = await fetch(`/api/products${params}`);
-      const data = await res.json();
-      setProducts(data);
+      setLoading(true);
+      const query = new URLSearchParams();
+      if (search) query.set("search", search);
+      query.set("page", String(page));
+      query.set("limit", "10");
+
+      const res = await fetch(`/api/products?${query.toString()}`);
+      const result = await res.json();
+      
+      setProducts(result.data);
+      setTotalPages(result.meta.totalPages);
+      setTotalProducts(result.meta.total);
     } catch {
       showToast("Failed to load products.", "error");
     } finally {
       setLoading(false);
     }
-  }, [search, user]);
+  }, [search, user, page]);
 
   useEffect(() => {
     if (user) {
@@ -348,8 +359,7 @@ export default function Home() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               <span className="product-count">
-                <span>{products.length}</span> product
-                {products.length !== 1 ? "s" : ""}
+                <span>{totalProducts}</span> total
               </span>
               <div className="search-wrapper">
                 <span className="search-icon">🔍</span>
@@ -382,77 +392,98 @@ export default function Home() {
               </p>
             </div>
           ) : (
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>SKU</th>
-                    <th>Quantity</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((product, i) => (
-                    <tr
-                      key={product.id}
-                      style={{ animationDelay: `${i * 0.04}s` }}
-                    >
-                      <td className="product-name">{product.name}</td>
-                      <td className="product-sku">
-                        {product.sku || "—"}
-                      </td>
-                      <td>
-                        <div className="quantity-controls">
-                          <button
-                            className="qty-btn qty-minus"
-                            onClick={() => handleInlineQuantityChange(product, -1)}
-                            disabled={product.quantity === 0}
-                            title="Decrease quantity"
-                            id={`qty-minus-${product.id}`}
-                          >
-                            −
-                          </button>
-                          <span
-                            className={`quantity-badge ${getStockClass(
-                              product.quantity
-                            )}`}
-                          >
-                            {product.quantity}
-                          </span>
-                          <button
-                            className="qty-btn qty-plus"
-                            onClick={() => handleInlineQuantityChange(product, 1)}
-                            title="Increase quantity"
-                            id={`qty-plus-${product.id}`}
-                          >
-                            +
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="actions">
-                          <button
-                            className="btn-icon"
-                            onClick={() => openEdit(product)}
-                            title="Edit product"
-                          >
-                            ✏️ Edit
-                          </button>
-                          <button
-                            className="btn-icon btn-danger"
-                            onClick={() => setDeleteProduct(product)}
-                            title="Delete product"
-                          >
-                            🗑️ Delete
-                          </button>
-                        </div>
-                      </td>
+            <>
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>SKU</th>
+                      <th>Quantity</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {products.map((product, i) => (
+                      <tr
+                        key={product.id}
+                        style={{ animationDelay: `${i * 0.04}s` }}
+                      >
+                        <td className="product-name">{product.name}</td>
+                        <td className="product-sku">
+                          {product.sku || "—"}
+                        </td>
+                        <td>
+                          <div className="quantity-controls">
+                            <button
+                              className="qty-btn qty-minus"
+                              onClick={() => handleInlineQuantityChange(product, -1)}
+                              disabled={product.quantity === 0}
+                              title="Decrease quantity"
+                              id={`qty-minus-${product.id}`}
+                            >
+                              −
+                            </button>
+                            <span
+                              className={`quantity-badge ${getStockClass(
+                                product.quantity
+                              )}`}
+                            >
+                              {product.quantity}
+                            </span>
+                            <button
+                              className="qty-btn qty-plus"
+                              onClick={() => handleInlineQuantityChange(product, 1)}
+                              title="Increase quantity"
+                              id={`qty-plus-${product.id}`}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="actions">
+                            <button
+                              className="btn-icon"
+                              onClick={() => openEdit(product)}
+                              title="Edit product"
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              className="btn-icon btn-danger"
+                              onClick={() => setDeleteProduct(product)}
+                              title="Delete product"
+                            >
+                              🗑️ Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="pagination-footer">
+                <button 
+                  className="btn-page" 
+                  disabled={page <= 1 || loading}
+                  onClick={() => setPage(p => p - 1)}
+                >
+                  ← Previous
+                </button>
+                <span className="page-info">
+                  Page <strong>{page}</strong> of <strong>{totalPages}</strong>
+                </span>
+                <button 
+                  className="btn-page" 
+                  disabled={page >= totalPages || loading}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  Next →
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { productUpdateSchema } from "@/lib/schemas";
 
 export async function PUT(
   request: NextRequest,
@@ -7,26 +8,18 @@ export async function PUT(
 ) {
   const { id } = await params;
   const body = await request.json();
-  const { name, sku, quantity } = body;
+  
+  const validation = productUpdateSchema.safeParse(body);
 
-  const errors: Record<string, string> = {};
-
-  if (name !== undefined && (typeof name !== "string" || name.trim() === "")) {
-    errors.name = "Product name cannot be empty.";
-  }
-
-  if (quantity !== undefined) {
-    const qty = Number(quantity);
-    if (isNaN(qty) || !Number.isInteger(qty)) {
-      errors.quantity = "Quantity must be a whole number.";
-    } else if (qty < 0) {
-      errors.quantity = "Quantity cannot be negative.";
-    }
-  }
-
-  if (Object.keys(errors).length > 0) {
+  if (!validation.success) {
+    const errors: Record<string, string> = {};
+    validation.error.issues.forEach((issue) => {
+      errors[String(issue.path[0])] = issue.message;
+    });
     return NextResponse.json({ errors }, { status: 400 });
   }
+
+  const { name, sku, quantity } = validation.data;
 
   try {
     // Fetch current product for change comparison

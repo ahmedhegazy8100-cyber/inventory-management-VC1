@@ -3,7 +3,15 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 const getSecretKey = () => {
-  const secret = process.env.JWT_SECRET || "fallback_secret_for_development_only";
+  const secret = process.env.JWT_SECRET;
+  
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("JWT_SECRET environment variable is required in production");
+    }
+    return new TextEncoder().encode("fallback_secret_for_development_only");
+  }
+  
   return new TextEncoder().encode(secret);
 };
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useI18n } from "./../components/I18nProvider";
 import "./../globals.css";
 
 interface Product {
@@ -31,6 +32,7 @@ interface FormErrors {
 
 export default function OrdersPage() {
   const queryClient = useQueryClient();
+  const { t, isRTL } = useI18n();
 
   // Order modal state
   const [activeSuggestion, setActiveSuggestion] = useState<Product | null>(null);
@@ -157,31 +159,31 @@ export default function OrdersPage() {
       {/* Suggestions Section */}
       <div className="card" style={{ marginBottom: "32px", borderColor: "rgba(245, 158, 11, 0.3)" }}>
         <div className="card-title">
-          <span className="icon">⚠️</span> Low Stock Suggestions
+          <span className="icon">⚠️</span> {t("lowStock")}
         </div>
         <p style={{ color: "var(--text-secondary)", marginBottom: "20px", fontSize: "0.9rem" }}>
-          These items have less than 50 pieces in stock. You can order more or ignore the suggestion.
+          {isRTL ? "هذه العناصر لديها أقل من 50 قطعة في المخزون. يمكنك طلب المزيد أو تجاهل الاقتراح." : "These items have less than 50 pieces in stock. You can order more or ignore the suggestion."}
         </p>
         
         {loading ? (
           <div className="empty-state">
-            <p>Loading suggestions...</p>
+            <p>{t("loading") || "Loading..."}</p>
           </div>
         ) : suggestions.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">✅</div>
-            <h3>All Good!</h3>
-            <p>No low stock items need restocking right now.</p>
+            <h3>{isRTL ? "كل شيء على ما يرام!" : "All Good!"}</h3>
+            <p>{isRTL ? "لا توجد عناصر مخزون منخفض تحتاج إلى إعادة التخزين الآن." : "No low stock items need restocking right now."}</p>
           </div>
         ) : (
           <div className="table-wrapper">
             <table>
               <thead>
                 <tr>
-                  <th>Product Name</th>
-                  <th>SKU</th>
-                  <th>Current Stock</th>
-                  <th>Actions</th>
+                  <th>{t("name")}</th>
+                  <th>{t("sku")}</th>
+                  <th>{t("quantity")}</th>
+                  <th>{t("actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -198,17 +200,17 @@ export default function OrdersPage() {
                           className="btn-icon btn-danger"
                           onClick={() => handleIgnore(prod.id)}
                           disabled={ignoreMutation.isPending}
-                          title="Ignore this suggestion"
+                          title={t("ignore")}
                         >
-                          {ignoreMutation.isPending ? "..." : "❌ Ignore"}
+                          {ignoreMutation.isPending ? "..." : `❌ ${t("ignoring")}`}
                         </button>
                         <button
                           className="btn-icon"
                           style={{ color: "var(--success)", borderColor: "var(--success)" }}
                           onClick={() => openOrderModal(prod)}
-                          title="Place order"
+                          title={t("placeOrder")}
                         >
-                          📦 Order
+                          📦 {t("placeOrder")}
                         </button>
                       </div>
                     </td>
@@ -223,29 +225,23 @@ export default function OrdersPage() {
       {/* Active Orders Section */}
       <div className="card">
         <div className="card-title">
-          <span className="icon">🚚</span> Active Orders
+          <span className="icon">🚚</span> {t("activeOrders")}
         </div>
         
         {loading ? (
           <div className="empty-state">
-            <p>Loading orders...</p>
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📭</div>
-            <h3>No Active Orders</h3>
-            <p>Orders you place will appear here.</p>
+            <p>{t("loading") || "Loading..."}</p>
           </div>
         ) : (
           <div className="table-wrapper">
             <table>
               <thead>
                 <tr>
-                  <th>Product</th>
-                  <th>Provider</th>
-                  <th>Ordered Qty</th>
-                  <th>Expected Date</th>
-                  <th>Status</th>
+                  <th>{t("name")}</th>
+                  <th>{t("provider")}</th>
+                  <th>{t("quantity")}</th>
+                  <th>{t("expectedDate")}</th>
+                  <th>{isRTL ? "الحالة" : "Status"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -259,7 +255,7 @@ export default function OrdersPage() {
                     </td>
                     <td>{order.providerName}</td>
                     <td>{order.quantity}</td>
-                    <td>{new Date(order.expectedDate).toLocaleDateString()}</td>
+                    <td dir="ltr" style={{ textAlign: isRTL ? 'right' : 'left' }}>{new Date(order.expectedDate).toLocaleDateString()}</td>
                     <td>
                       <span className="quantity-badge" style={{ background: "rgba(99, 102, 241, 0.1)", color: "var(--accent-hover)" }}>
                         {order.status}
@@ -277,11 +273,11 @@ export default function OrdersPage() {
       {activeSuggestion && (
         <div className="modal-overlay" onClick={() => setActiveSuggestion(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Place Order</h3>
+            <h3>{t("placeOrder")}</h3>
             
             <form onSubmit={handleOrderSubmit}>
               <div className="form-group" style={{ marginBottom: 16 }}>
-                <label>Item Name</label>
+                <label>{t("name")}</label>
                 <input
                   type="text"
                   value={activeSuggestion.name}
@@ -291,30 +287,30 @@ export default function OrdersPage() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 16 }}>
-                <label htmlFor="provider-name">Provider Name *</label>
+                <label htmlFor="provider-name">{t("provider")} *</label>
                 <input
                   id="provider-name"
                   type="text"
                   value={formProviderName}
                   onChange={(e) => {
                     setFormProviderName(e.target.value);
-                    if (formErrors.providerName) setFormErrors((p) => ({ ...p, providerName: undefined }));
+                    if (formErrors.providerName) setFormErrors((p: FormErrors) => ({ ...p, providerName: undefined }));
                   }}
                   className={formErrors.providerName ? "input-error" : ""}
-                  placeholder="e.g. Acme Supplier Inc."
+                  placeholder={isRTL ? "مثال: شركة الوفاء للتوريدات" : "e.g. Acme Supplier Inc."}
                 />
                 <span className="error-text">{formErrors.providerName || ""}</span>
               </div>
 
               <div className="form-group" style={{ marginBottom: 16 }}>
-                <label htmlFor="expected-date">Date of Receiving Shipment *</label>
+                <label htmlFor="expected-date">{t("expectedDate")} *</label>
                 <input
                   id="expected-date"
                   type="date"
                   value={formExpectedDate}
                   onChange={(e) => {
                     setFormExpectedDate(e.target.value);
-                    if (formErrors.expectedDate) setFormErrors((p) => ({ ...p, expectedDate: undefined }));
+                    if (formErrors.expectedDate) setFormErrors((p: FormErrors) => ({ ...p, expectedDate: undefined }));
                   }}
                   className={formErrors.expectedDate ? "input-error" : ""}
                 />
@@ -322,7 +318,7 @@ export default function OrdersPage() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 16 }}>
-                <label htmlFor="order-qty">Quantity *</label>
+                <label htmlFor="order-qty">{t("quantity")} *</label>
                 <input
                   id="order-qty"
                   type="number"
@@ -331,7 +327,7 @@ export default function OrdersPage() {
                   value={formQuantity}
                   onChange={(e) => {
                     setFormQuantity(e.target.value);
-                    if (formErrors.quantity) setFormErrors((p) => ({ ...p, quantity: undefined }));
+                    if (formErrors.quantity) setFormErrors((p: FormErrors) => ({ ...p, quantity: undefined }));
                   }}
                   className={formErrors.quantity ? "input-error" : ""}
                 />
@@ -339,12 +335,12 @@ export default function OrdersPage() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="order-notes">Notes</label>
+                <label htmlFor="order-notes">{t("notes")}</label>
                 <textarea
                   id="order-notes"
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
-                  placeholder="Additional delivery instructions..."
+                  placeholder={isRTL ? "ملاحظات إضافية للتوصيل..." : "Additional delivery instructions..."}
                   style={{
                     background: "var(--bg-input)",
                     border: "1px solid var(--border-color)",
@@ -364,10 +360,10 @@ export default function OrdersPage() {
                   className="btn-cancel"
                   onClick={() => setActiveSuggestion(null)}
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button type="submit" className="btn-save" disabled={placeOrderMutation.isPending}>
-                  {placeOrderMutation.isPending ? "Placing Order..." : "Submit Order"}
+                  {placeOrderMutation.isPending ? "..." : t("submitOrder")}
                 </button>
               </div>
             </form>

@@ -9,8 +9,10 @@ export async function GET(request: NextRequest) {
   const limit = Math.max(1, Math.min(100, Number(searchParams.get("limit")) || 10));
   const skip = (page - 1) * limit;
 
+  const includeDeleted = searchParams.get("includeDeleted") === "true";
+
   const where = {
-    deletedAt: null,
+    ...(includeDeleted ? {} : { deletedAt: null }),
     ...(search
       ? {
           OR: [

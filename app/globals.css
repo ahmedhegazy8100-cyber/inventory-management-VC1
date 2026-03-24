@@ -1,8 +1,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* 2026 Enterprise Palette */
-  --bg-primary: #0b0e14; /* Deep Obsidian */
+  /* Common Structural Tokens */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  
+  --transition-fast: 0.15s cubic-bezier(0.2, 0, 0, 1);
+  --transition-base: 0.35s cubic-bezier(0.2, 0, 0, 1);
+  --glass-blur: 24px;
+  
+  /* Shared Branding Colors */
+  --accent: #635bff;
+  --accent-hover: #7b74ff;
+  --accent-glow: rgba(99, 91, 255, 0.2);
+  
+  --success: #00ffc2;
+  --success-bg: rgba(0, 255, 194, 0.08);
+  
+  --danger: #ff4d4d;
+  --danger-hover: #ff6666;
+  --danger-bg: rgba(255, 77, 77, 0.08);
+  
+  --warning: #dfff00;
+  --warning-bg: rgba(223, 255, 0, 0.08);
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0b0e14;
   --bg-secondary: #0f131a;
   --bg-card: rgba(15, 20, 28, 0.7);
   --bg-card-hover: rgba(20, 26, 36, 0.85);
@@ -15,31 +40,38 @@
   --text-secondary: #a0aec0;
   --text-muted: #718096;
   
-  --accent: #635bff; /* Electric Indigo */
-  --accent-hover: #7b74ff;
-  --accent-glow: rgba(99, 91, 255, 0.2);
-  
-  --success: #00ffc2; /* Mint */
-  --success-bg: rgba(0, 255, 194, 0.08);
-  
-  --danger: #ff4d4d;
-  --danger-hover: #ff6666;
-  --danger-bg: rgba(255, 77, 77, 0.08);
-  
-  --warning: #dfff00; /* Wasabi */
-  --warning-bg: rgba(223, 255, 0, 0.08);
-  
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 12px 30px -10px rgba(0, 0, 0, 0.6);
   --shadow-lg: 0 24px 60px -15px rgba(0, 0, 0, 0.8);
+
+  --sidebar-bg: rgba(15, 19, 26, 0.8);
+}
+
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.75);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+  --bg-input: #edf2f7;
   
-  --transition-fast: 0.15s cubic-bezier(0.2, 0, 0, 1);
-  --transition-base: 0.35s cubic-bezier(0.2, 0, 0, 1);
-  --glass-blur: 24px;
+  --border-color: rgba(99, 91, 255, 0.1);
+  --border-focus: rgba(99, 91, 255, 0.3);
+  
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  --sidebar-bg: rgba(255, 255, 255, 0.9);
+  
+  /* Light-mode overrides for Mint/Wasabi visibility */
+  --success: #059669;
+  --success-bg: rgba(5, 150, 105, 0.1);
+  --warning: #829a21;
+  --warning-bg: rgba(130, 154, 33, 0.1);
 }
 
 *, *::before, *::after {
@@ -73,7 +105,7 @@ body::before {
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 91, 255, 0.12), transparent),
     radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139, 92, 246, 0.08), transparent);
   pointer-events: none;
   z-index: 0;
@@ -89,7 +121,7 @@ body::before {
 
 .sidebar {
   width: 260px;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);

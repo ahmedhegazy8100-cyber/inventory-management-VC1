@@ -80,25 +80,62 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="container auth-container">
-      <header className="header" style={{ marginBottom: "32px", textAlign: "center" }}>
-        <h1 style={{ fontSize: "2.5rem", fontWeight: 700, background: "linear-gradient(135deg, var(--text-primary), var(--accent-hover))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>📦 Inventory Tracker</h1>
-        <p style={{ color: "var(--text-secondary)", marginTop: "8px" }}>Please {authMode === "login" ? "log in" : "sign up"} to continue</p>
+    <div className="auth-container page-fade-in" style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      background: 'radial-gradient(circle at center, rgba(99, 102, 241, 0.05) 0%, transparent 70%)'
+    }}>
+      <header style={{ marginBottom: "48px", textAlign: "center" }}>
+        <div style={{ 
+          fontSize: "3rem", 
+          fontWeight: 900, 
+          letterSpacing: "-0.05em",
+          background: "linear-gradient(135deg, #fff 0%, var(--accent) 100%)", 
+          WebkitBackgroundClip: "text", 
+          WebkitTextFillColor: "transparent",
+          marginBottom: '8px'
+        }}>
+          Inventra
+        </div>
+        <p style={{ color: "var(--text-secondary)", fontSize: '1.1rem' }}>
+          {authMode === "login" ? "Welcome back to your logistics hub" : "Start your journey with Inventra"}
+        </p>
       </header>
 
-      <div className="card auth-card">
-        <div className="auth-tabs">
+      <div className="card auth-card" style={{ width: '100%', maxWidth: '420px', padding: '40px' }}>
+        <div className="auth-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: 'var(--radius-md)' }}>
           <button
             className={`auth-tab ${authMode === "login" ? "active" : ""}`}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              borderRadius: 'var(--radius-sm)',
+              background: authMode === 'login' ? 'var(--accent)' : 'transparent',
+              color: authMode === 'login' ? '#fff' : 'var(--text-secondary)',
+              fontWeight: 600,
+              transition: 'all 0.2s ease'
+            }}
             onClick={() => {
               setAuthMode("login");
               setAuthErrors({});
             }}
           >
-            Login
+            Log In
           </button>
           <button
             className={`auth-tab ${authMode === "signup" ? "active" : ""}`}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              borderRadius: 'var(--radius-sm)',
+              background: authMode === 'signup' ? 'var(--accent)' : 'transparent',
+              color: authMode === 'signup' ? '#fff' : 'var(--text-secondary)',
+              fontWeight: 600,
+              transition: 'all 0.2s ease'
+            }}
             onClick={() => {
               setAuthMode("signup");
               setAuthErrors({});
@@ -110,69 +147,60 @@ export default function LoginPage() {
 
         <form onSubmit={handleAuth} className="auth-form">
           {authMode === "signup" && (
-            <div className="form-group">
-              <label htmlFor="auth-name">Name</label>
+            <div className="form-group" style={{ marginBottom: '20px' }}>
+              <label htmlFor="auth-name" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Full Name</label>
               <input
                 id="auth-name"
                 type="text"
-                placeholder="Your full name"
+                placeholder="John Doe"
                 value={authName}
                 onChange={(e) => setAuthName(e.target.value)}
+                style={{ width: '100%', padding: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: '#fff' }}
                 className={authErrors.name ? "input-error" : ""}
               />
-              <span className="error-text">{authErrors.name || ""}</span>
+              {authErrors.name && <span className="error-text" style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{authErrors.name}</span>}
             </div>
           )}
-          <div className="form-group">
-            <label htmlFor="auth-email">Email</label>
+          <div className="form-group" style={{ marginBottom: '20px' }}>
+            <label htmlFor="auth-email" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Email Address</label>
             <input
               id="auth-email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="name@company.com"
               value={authEmail}
               onChange={(e) => setAuthEmail(e.target.value)}
+              style={{ width: '100%', padding: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: '#fff' }}
               className={authErrors.email ? "input-error" : ""}
             />
-            <span className="error-text">{authErrors.email || ""}</span>
+            {authErrors.email && <span className="error-text" style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{authErrors.email}</span>}
           </div>
-          <div className="form-group">
-            <label htmlFor="auth-password">Password</label>
+          <div className="form-group" style={{ marginBottom: '32px' }}>
+            <label htmlFor="auth-password" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Password</label>
             <input
               id="auth-password"
               type="password"
               placeholder="••••••••"
               value={authPassword}
               onChange={(e) => setAuthPassword(e.target.value)}
+              style={{ width: '100%', padding: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: '#fff' }}
               className={authErrors.password ? "input-error" : ""}
             />
-            <span className="error-text">{authErrors.password || ""}</span>
+            {authErrors.password && <span className="error-text" style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{authErrors.password}</span>}
           </div>
-          {authMode === "signup" && (
-            <div className="form-group">
-              <label htmlFor="auth-confirm">Confirm Password</label>
-              <input
-                id="auth-confirm"
-                type="password"
-                placeholder="••••••••"
-                value={authConfirmPassword}
-                onChange={(e) => setAuthConfirmPassword(e.target.value)}
-                className={authErrors.confirmPassword ? "input-error" : ""}
-              />
-              <span className="error-text">
-                {authErrors.confirmPassword || ""}
-              </span>
-            </div>
-          )}
 
-          <button type="submit" className="btn-add btn-auth" disabled={isSubmittingAuth}>
+          <button type="submit" className="btn-add" style={{ width: '100%', padding: '14px', fontSize: '1rem', fontWeight: 700, marginTop: 0 }} disabled={isSubmittingAuth}>
             {isSubmittingAuth
-              ? "Please wait..."
+              ? "Authenticating..."
               : authMode === "login"
-              ? "Log In"
-              : "Create Account"}
+              ? "Access Dashboard"
+              : "Create Business Account"}
           </button>
         </form>
       </div>
+
+      <footer style={{ marginTop: '48px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+        &copy; 2026 Inventra Logistics Systems. All rights reserved.
+      </footer>
 
       {toast && <div className={`toast toast-${toast.type}`}>{toast.message}</div>}
     </div>

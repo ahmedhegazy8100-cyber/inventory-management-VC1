@@ -155,14 +155,21 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="container" style={{ paddingTop: 0 }}>
+    <div className="page-fade-in">
+      <header className="page-header">
+        <div>
+          <h1>{t("orders") || "Orders Management"}</h1>
+          <p className="text-secondary">{t("manageShipments") || "Track and restock your inventory"}</p>
+        </div>
+      </header>
+
       {/* Suggestions Section */}
-      <div className="card" style={{ marginBottom: "32px", borderColor: "rgba(245, 158, 11, 0.3)" }}>
+      <div className="card" style={{ marginBottom: "32px", borderLeft: "4px solid var(--warning)" }}>
         <div className="card-title">
           <span className="icon">⚠️</span> {t("lowStock")}
         </div>
-        <p style={{ color: "var(--text-secondary)", marginBottom: "20px", fontSize: "0.9rem" }}>
-          {isRTL ? "هذه العناصر لديها أقل من 50 قطعة في المخزون. يمكنك طلب المزيد أو تجاهل الاقتراح." : "These items have less than 50 pieces in stock. You can order more or ignore the suggestion."}
+        <p style={{ color: "var(--text-secondary)", marginBottom: "24px", fontSize: "0.95rem" }}>
+          {isRTL ? "هذه العناصر شارفت على النفاد. نوصي بإعادة طلبها الآن." : "These items are running low. We recommend restocking them immediately."}
         </p>
         
         {loading ? (
@@ -171,9 +178,9 @@ export default function OrdersPage() {
           </div>
         ) : suggestions.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">✅</div>
-            <h3>{isRTL ? "كل شيء على ما يرام!" : "All Good!"}</h3>
-            <p>{isRTL ? "لا توجد عناصر مخزون منخفض تحتاج إلى إعادة التخزين الآن." : "No low stock items need restocking right now."}</p>
+            <div className="empty-icon">✨</div>
+            <h3>{isRTL ? "المخزون مكتمل" : "Stock is Optimal"}</h3>
+            <p>{isRTL ? "لا توجد عناصر تحتاج إلى إعادة طلب حالياً." : "No items require restocking at this time."}</p>
           </div>
         ) : (
           <div className="table-wrapper">
@@ -197,18 +204,17 @@ export default function OrdersPage() {
                     <td>
                       <div className="actions">
                         <button
-                          className="btn-icon btn-danger"
+                          className="btn-icon"
+                          style={{ color: "var(--text-muted)" }}
                           onClick={() => handleIgnore(prod.id)}
                           disabled={ignoreMutation.isPending}
-                          title={t("ignore")}
                         >
-                          {ignoreMutation.isPending ? "..." : `❌ ${t("ignoring")}`}
+                          {ignoreMutation.isPending ? "..." : `✖️ ${t("ignoring")}`}
                         </button>
                         <button
-                          className="btn-icon"
-                          style={{ color: "var(--success)", borderColor: "var(--success)" }}
+                          className="btn-add"
+                          style={{ marginTop: 0, padding: '8px 16px' }}
                           onClick={() => openOrderModal(prod)}
-                          title={t("placeOrder")}
                         >
                           📦 {t("placeOrder")}
                         </button>
@@ -223,14 +229,20 @@ export default function OrdersPage() {
       </div>
 
       {/* Active Orders Section */}
-      <div className="card">
-        <div className="card-title">
-          <span className="icon">🚚</span> {t("activeOrders")}
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="inventory-card-header" style={{ padding: '24px 32px', borderBottom: '1px solid var(--border-color)' }}>
+          <div className="card-title" style={{ marginBottom: 0 }}>
+            <span className="icon">🚚</span> {t("activeOrders")}
+          </div>
         </div>
         
         {loading ? (
           <div className="empty-state">
-            <p>{t("loading") || "Loading..."}</p>
+            <p>{t("loading") || "Loading orders..."}</p>
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="empty-state">
+            <p>No active orders found.</p>
           </div>
         ) : (
           <div className="table-wrapper">
@@ -241,7 +253,7 @@ export default function OrdersPage() {
                   <th>{t("provider")}</th>
                   <th>{t("quantity")}</th>
                   <th>{t("expectedDate")}</th>
-                  <th>{isRTL ? "الحالة" : "Status"}</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -249,15 +261,15 @@ export default function OrdersPage() {
                   <tr key={order.id} style={{ animationDelay: `${i * 0.04}s` }}>
                     <td>
                       <div className="product-name">{order.product.name}</div>
-                      <div className="product-sku" style={{ fontSize: "0.75rem", marginTop: "2px" }}>
+                      <div className="product-sku" style={{ fontSize: "0.75rem" }}>
                         {order.product.sku || "No SKU"}
                       </div>
                     </td>
                     <td>{order.providerName}</td>
-                    <td>{order.quantity}</td>
-                    <td dir="ltr" style={{ textAlign: isRTL ? 'right' : 'left' }}>{new Date(order.expectedDate).toLocaleDateString()}</td>
+                    <td><span className="quantity-badge stock-ok">{order.quantity}</span></td>
+                    <td dir="ltr">{new Date(order.expectedDate).toLocaleDateString()}</td>
                     <td>
-                      <span className="quantity-badge" style={{ background: "rgba(99, 102, 241, 0.1)", color: "var(--accent-hover)" }}>
+                      <span className="quantity-badge" style={{ background: "var(--accent-glow)", color: "var(--accent)" }}>
                         {order.status}
                       </span>
                     </td>
@@ -277,13 +289,8 @@ export default function OrdersPage() {
             
             <form onSubmit={handleOrderSubmit}>
               <div className="form-group" style={{ marginBottom: 16 }}>
-                <label>{t("name")}</label>
-                <input
-                  type="text"
-                  value={activeSuggestion.name}
-                  disabled
-                  style={{ opacity: 0.7 }}
-                />
+                <label>{t("product") || "Product"}</label>
+                <input type="text" value={activeSuggestion.name} disabled style={{ opacity: 0.6 }} />
               </div>
 
               <div className="form-group" style={{ marginBottom: 16 }}>
@@ -292,76 +299,49 @@ export default function OrdersPage() {
                   id="provider-name"
                   type="text"
                   value={formProviderName}
-                  onChange={(e) => {
-                    setFormProviderName(e.target.value);
-                    if (formErrors.providerName) setFormErrors((p: FormErrors) => ({ ...p, providerName: undefined }));
-                  }}
+                  onChange={(e) => setFormProviderName(e.target.value)}
                   className={formErrors.providerName ? "input-error" : ""}
-                  placeholder={isRTL ? "مثال: شركة الوفاء للتوريدات" : "e.g. Acme Supplier Inc."}
+                  placeholder="e.g. Acme Logistics"
                 />
-                <span className="error-text">{formErrors.providerName || ""}</span>
+                {formErrors.providerName && <span className="error-text">{formErrors.providerName}</span>}
               </div>
 
-              <div className="form-group" style={{ marginBottom: 16 }}>
-                <label htmlFor="expected-date">{t("expectedDate")} *</label>
-                <input
-                  id="expected-date"
-                  type="date"
-                  value={formExpectedDate}
-                  onChange={(e) => {
-                    setFormExpectedDate(e.target.value);
-                    if (formErrors.expectedDate) setFormErrors((p: FormErrors) => ({ ...p, expectedDate: undefined }));
-                  }}
-                  className={formErrors.expectedDate ? "input-error" : ""}
-                />
-                <span className="error-text">{formErrors.expectedDate || ""}</span>
+              <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: 16 }}>
+                <div className="form-group">
+                  <label htmlFor="expected-date">{t("expectedDate")} *</label>
+                  <input
+                    id="expected-date"
+                    type="date"
+                    value={formExpectedDate}
+                    onChange={(e) => setFormExpectedDate(e.target.value)}
+                    className={formErrors.expectedDate ? "input-error" : ""}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="order-qty">{t("quantity")} *</label>
+                  <input
+                    id="order-qty"
+                    type="number"
+                    value={formQuantity}
+                    onChange={(e) => setFormQuantity(e.target.value)}
+                    className={formErrors.quantity ? "input-error" : ""}
+                  />
+                </div>
               </div>
 
-              <div className="form-group" style={{ marginBottom: 16 }}>
-                <label htmlFor="order-qty">{t("quantity")} *</label>
-                <input
-                  id="order-qty"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={formQuantity}
-                  onChange={(e) => {
-                    setFormQuantity(e.target.value);
-                    if (formErrors.quantity) setFormErrors((p: FormErrors) => ({ ...p, quantity: undefined }));
-                  }}
-                  className={formErrors.quantity ? "input-error" : ""}
-                />
-                <span className="error-text">{formErrors.quantity || ""}</span>
-              </div>
-
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: 24 }}>
                 <label htmlFor="order-notes">{t("notes")}</label>
                 <textarea
                   id="order-notes"
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
-                  placeholder={isRTL ? "ملاحظات إضافية للتوصيل..." : "Additional delivery instructions..."}
-                  style={{
-                    background: "var(--bg-input)",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "var(--radius-sm)",
-                    padding: "11px 14px",
-                    color: "var(--text-primary)",
-                    fontFamily: "inherit",
-                    minHeight: "80px",
-                    resize: "vertical"
-                  }}
+                  placeholder="Add instructions..."
+                  style={{ minHeight: '80px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '12px', color: 'var(--text-primary)' }}
                 />
               </div>
 
               <div className="modal-actions">
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={() => setActiveSuggestion(null)}
-                >
-                  {t("cancel")}
-                </button>
+                <button type="button" className="btn-cancel" onClick={() => setActiveSuggestion(null)}>{t("cancel")}</button>
                 <button type="submit" className="btn-save" disabled={placeOrderMutation.isPending}>
                   {placeOrderMutation.isPending ? "..." : t("submitOrder")}
                 </button>
@@ -371,7 +351,6 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <div className={`toast toast-${toast.type}`}>{toast.message}</div>
       )}

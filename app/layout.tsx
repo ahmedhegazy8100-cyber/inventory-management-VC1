@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { cookies } from "next/headers";
 import Providers from "./Providers";
 import { I18nProvider } from "./components/I18nProvider";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { LanguageSwitcher } from "./components/LanguageSwitcher";
-import { ThemeToggle } from "./components/ThemeToggle";
+import { Sidebar } from "./components/Sidebar";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Inventory Pro | 2026",
-  description: "Advanced enterprise-grade inventory management",
+  title: "Inventra | Modern Inventory SaaS",
+  description: "Enterprise-grade inventory management powered by operational intelligence",
 };
 
 export default async function RootLayout({
@@ -22,33 +20,22 @@ export default async function RootLayout({
   const isAuthenticated = !!cookieStore.get("auth_token")?.value;
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <I18nProvider>
           <ThemeProvider>
             <Providers>
               {isAuthenticated ? (
                 <div className="app-wrapper">
-                  <aside className="sidebar">
-                    <div className="sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <h1>📦</h1>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <ThemeToggle />
-                        <LanguageSwitcher />
-                      </div>
-                    </div>
-                    <nav className="side-nav">
-                      <Link href="/" className="side-nav-item">Inventory</Link>
-                      <Link href="/orders" className="side-nav-item">Orders</Link>
-                      <Link href="/audit-logs" className="side-nav-item">Audit Logs</Link>
-                    </nav>
-                  </aside>
+                  <Sidebar />
                   <main className="main-content">
-                    {children}
+                    <div className="container">
+                      {children}
+                    </div>
                   </main>
                 </div>
               ) : (
-                <div style={{ minHeight: "100vh" }}>
+                <div className="auth-wrapper">
                   {children}
                 </div>
               )}

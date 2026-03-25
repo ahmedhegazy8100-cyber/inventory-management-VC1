@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "./components/I18nProvider";
+import { ProductTable } from "./components/ProductTable";
 import "./globals.css";
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
   sku: string | null;
@@ -36,6 +37,7 @@ export default function Home() {
   const [showArchived, setShowArchived] = useState(false);
 
   // Form state (Add Product)
+  const [showAddForm, setShowAddForm] = useState(false);
   const [formName, setFormName] = useState("");
   const [formSku, setFormSku] = useState("");
   const [formQuantity, setFormQuantity] = useState("0");
@@ -92,7 +94,7 @@ export default function Home() {
 
   // React Query: Fetch Products
   const { data: result, isLoading: loading } = useQuery({
-    queryKey: ["products", search, page],
+    queryKey: ["products", search, page, showArchived],
     queryFn: async () => {
       const query = new URLSearchParams();
       if (search) query.set("search", search);
@@ -130,6 +132,7 @@ export default function Home() {
       setFormSku("");
       setFormQuantity("0");
       setFormErrors({});
+      setShowAddForm(false);
       showToast("Product added successfully!");
     },
     onError: (err: any) => {
@@ -258,8 +261,8 @@ export default function Home() {
 
   if (loadingApp) {
     return (
-      <div className="container" style={{ paddingTop: 64, textAlign: "center" }}>
-        <p style={{ color: "var(--text-muted)" }}>{t("loadingApp") || "Loading..."}</p>
+      <div className="empty-state" style={{ paddingTop: 64 }}>
+        <p style={{ color: "var(--text-muted)" }}>{t("loadingApp") || "Initializing Inventra..."}</p>
       </div>
     );
   }
@@ -269,376 +272,293 @@ export default function Home() {
   const lowStockCount = products.filter((p: Product) => p.quantity < 50).length;
 
   return (
-    <div className="container" style={{ paddingTop: 0 }}>
-      {/* Top Banner */}
-      <div className="user-banner">
-        <span className="user-greeting">{t("welcome")}, <strong>{user.name}</strong></span>
-        <button onClick={handleLogout} className="btn-logout">{t("logout")}</button>
-      </div>
+    <div className="page-fade-in">
+      <header className="page-header">
+        <div>
+          <h1>{t("dashboard") || "Dashboard Overview"}</h1>
+          <p className="text-secondary">{t("welcomeBack") || "Welcome back"}, {user.name}</p>
+        </div>
+        <div className="header-actions">
+          <button onClick={() => setShowAddForm(true)} className="btn-add" style={{ marginTop: 0 }}>
+            <span>➕</span> {t("addProduct")}
+          </button>
+          <button onClick={handleLogout} className="btn-logout">{t("logout")}</button>
+        </div>
+      </header>
 
       {/* Bento Grid Metrics */}
-      <div className="bento-grid" style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
-        gap: '20px', 
-        marginBottom: '32px' 
-      }}>
-        <div className="card metric-card">
-          <div className="metric-icon" style={{ color: 'var(--accent)' }}>📊</div>
+      <div className="bento-grid">
+        <div className="card bento-card metric-primary">
+          <div className="bento-icon">📊</div>
           <div>
-            <div className="metric-label">{t("totalProducts") || "Total Items"}</div>
+            <div className="metric-label">{t("totalItems") || "Total Items"}</div>
             <div className="metric-value">{totalProducts}</div>
           </div>
         </div>
-        <div className="card metric-card">
-          <div className="metric-icon" style={{ color: 'var(--warning)' }}>⚠️</div>
+        
+        <div className="card bento-card metric-warning">
+          <div className="bento-icon">⚠️</div>
           <div>
-            <div className="metric-label">{t("lowStock") || "Low Stock"}</div>
+            <div className="metric-label">{t("lowStock") || "Alerts"}</div>
             <div className="metric-value">{lowStockCount}</div>
+            <p className="metric-subtext">{t("needsRestock") || "Items needing restock"}</p>
           </div>
         </div>
-        <div className="card metric-card">
-          <div className="metric-icon" style={{ color: 'var(--success)' }}>✅</div>
+
+        <div className="card bento-card metric-success">
+          <div className="bento-icon">📈</div>
           <div>
-            <div className="metric-label">{t("inStock") || "Healthy Stock"}</div>
+            <div className="metric-label">{t("healthyStock") || "Healthy"}</div>
             <div className="metric-value">{totalProducts - lowStockCount}</div>
+            <p className="metric-subtext">{t("allGood") || "Inventory stable"}</p>
           </div>
         </div>
       </div>
 
       <style jsx>{`
-        .metric-card {
+        .page-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 32px;
+        }
+        .header-actions {
+          display: flex;
+          gap: 12px;
+        }
+        .bento-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          grid-auto-rows: minmax(140px, auto);
+          gap: 20px;
+          margin-bottom: 32px;
+        }
+        .bento-card {
           display: flex;
           align-items: center;
-          gap: 20px;
-          padding: 20px 24px;
+          gap: 24px;
+          padding: 24px 32px;
         }
-        .metric-icon {
-          font-size: 2rem;
+        .bento-icon {
+          font-size: 2.2rem;
           background: rgba(255, 255, 255, 0.05);
-          width: 56px;
-          height: 56px;
+          width: 64px;
+          height: 64px;
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: var(--radius-md);
         }
         .metric-label {
-          font-size: 0.8rem;
+          font-size: 0.85rem;
           color: var(--text-secondary);
           text-transform: uppercase;
+          font-weight: 600;
           letter-spacing: 0.05em;
         }
         .metric-value {
-          font-size: 1.5rem;
-          font-weight: 700;
+          font-size: 1.8rem;
+          font-weight: 800;
           color: var(--text-primary);
+          line-height: 1;
+          margin: 4px 0;
+        }
+        .metric-subtext {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+        }
+        .metric-warning .bento-icon { color: var(--warning); }
+        .metric-success .bento-icon { color: var(--success); }
+        .metric-primary .bento-icon { color: var(--accent); }
+
+        .inventory-card {
+          padding: 0;
+          overflow: hidden;
+        }
+        .inventory-card-header {
+          padding: 24px 32px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 1024px) {
+          .bento-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 640px) {
+          .bento-grid { grid-template-columns: 1fr; }
+          .page-header { flex-direction: column; gap: 16px; }
         }
       `}</style>
 
-      {/* Add Product Card */}
-      <div className="card" style={{ marginBottom: '32px' }}>
-        <div className="card-title">
-          <span className="icon">➕</span> {t("addProduct")}
-        </div>
-        <form onSubmit={handleAdd}>
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="add-name">{t("name")} *</label>
+      {/* Inventory Section */}
+      <div className="card inventory-card">
+        <div className="inventory-card-header">
+          <div className="card-title" style={{ marginBottom: 0 }}>
+            <span className="icon">📋</span> {t("inventory") || "Inventory"}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div className="search-wrapper" style={{ width: 260 }}>
+              <span className="search-icon">🔍</span>
               <input
-                id="add-name"
                 type="text"
-                placeholder="Product name"
-                value={formName}
+                className="search-input"
+                placeholder={t("search")}
+                value={search}
                 onChange={(e) => {
-                  setFormName(e.target.value);
-                  if (formErrors.name) setFormErrors((p: FormErrors) => ({ ...p, name: undefined }));
+                  setSearch(e.target.value);
+                  setPage(1);
                 }}
-                className={formErrors.name ? "input-error" : ""}
               />
-              <span className="error-text">{formErrors.name || ""}</span>
             </div>
-            <div className="form-group">
-              <label htmlFor="add-sku">{t("sku")}</label>
-              <input
-                id="add-sku"
-                type="text"
-                placeholder="Optional SKU"
-                value={formSku}
-                onChange={(e) => setFormSku(e.target.value)}
-              />
-              <span className="error-text"></span>
-            </div>
-            <div className="form-group">
-              <label htmlFor="add-quantity">{t("quantity")}</label>
-              <input
-                id="add-quantity"
-                type="number"
-                min="0"
-                step="1"
-                value={formQuantity}
-                onChange={(e) => {
-                  setFormQuantity(e.target.value);
-                  if (formErrors.quantity)
-                    setFormErrors((p: FormErrors) => ({ ...p, quantity: undefined }));
-                }}
-                className={formErrors.quantity ? "input-error" : ""}
-              />
-              <span className="error-text">{formErrors.quantity || ""}</span>
-            </div>
-            <button
-              type="submit"
-              className="btn-add"
-              disabled={addMutation.isPending}
-              id="btn-add-product"
+            <button 
+              className={`btn-icon ${showArchived ? 'active' : ''}`}
+              onClick={() => setShowArchived(!showArchived)}
             >
-              {addMutation.isPending ? "..." : t("add") || "Add"}
+              {showArchived ? "📂" : "📁"} {t("archived")}
             </button>
           </div>
-        </form>
+        </div>
+
+        <ProductTable 
+          products={products}
+          loading={loading}
+          onEdit={openEdit}
+          onDelete={setDeleteProduct}
+          onQuantityChange={handleInlineQuantityChange}
+          getStockClass={getStockClass}
+        />
+
+        {products.length > 0 && (
+          <div className="pagination-footer">
+            <button 
+              className="btn-page" 
+              disabled={page <= 1 || loading}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              ← Previous
+            </button>
+            <span className="page-info">
+              {t("page")} <strong>{page}</strong> {t("of")} <strong>{totalPages}</strong>
+            </span>
+            <button 
+              className="btn-page" 
+              disabled={page >= totalPages || loading}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next →
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Inventory Table Card */}
-      <div className="inventory-section">
-        <div className="card">
-          <div className="inventory-header">
-            <div className="card-title" style={{ marginBottom: 0 }}>
-              <span className="icon">📋</span> {t("inventory")}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <span className="product-count">
-                <span>{totalProducts}</span> {t("total")}
-              </span>
-              <div className="search-wrapper">
-                <span className="search-icon">🔍</span>
+      {/* Add Modal */}
+      {showAddForm && (
+        <div className="modal-overlay" onClick={() => setShowAddForm(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>{t("addProduct")}</h3>
+            <form onSubmit={handleAdd}>
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label>Name *</label>
                 <input
                   type="text"
-                  className="search-input"
-                  placeholder={t("search")}
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  id="search-input"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  className={formErrors.name ? "input-error" : ""}
+                />
+                {formErrors.name && <span className="error-text">{formErrors.name}</span>}
+              </div>
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label>SKU</label>
+                <input
+                  type="text"
+                  value={formSku}
+                  onChange={(e) => setFormSku(e.target.value)}
                 />
               </div>
-              <button 
-                className={`btn-icon ${showArchived ? 'active' : ''}`}
-                onClick={() => setShowArchived(!showArchived)}
-                style={{ borderColor: showArchived ? 'var(--accent)' : '' }}
-              >
-                {showArchived ? "📂" : "📁"} {t("archived") || "Archived"}
-              </button>
-            </div>
+              <div className="form-group" style={{ marginBottom: 24 }}>
+                <label>Quantity</label>
+                <input
+                  type="number"
+                  value={formQuantity}
+                  onChange={(e) => setFormQuantity(e.target.value)}
+                  className={formErrors.quantity ? "input-error" : ""}
+                />
+                {formErrors.quantity && <span className="error-text">{formErrors.quantity}</span>}
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowAddForm(false)}>Cancel</button>
+                <button type="submit" className="btn-save" disabled={addMutation.isPending}>
+                  {addMutation.isPending ? "..." : "Add Product"}
+                </button>
+              </div>
+            </form>
           </div>
-
-          {loading ? (
-            <div className="empty-state">
-              <p>Loading products...</p>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <h3>
-                {search ? "No products match your search" : "No products yet"}
-              </h3>
-              <p>
-                {search
-                  ? "Try adjusting your search term."
-                  : "Add your first product using the form above."}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>{t("name")}</th>
-                      <th>{t("sku")}</th>
-                      <th>{t("quantity")}</th>
-                      <th>{t("actions")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products.map((product: Product, i: number) => (
-                      <tr
-                        key={product.id}
-                        style={{ animationDelay: `${i * 0.04}s` }}
-                      >
-                        <td className="product-name">{product.name}</td>
-                        <td className="product-sku">
-                          {product.sku || "—"}
-                        </td>
-                        <td>
-                          <div className="quantity-controls">
-                            <button
-                              className="qty-btn qty-minus"
-                              onClick={() => handleInlineQuantityChange(product, -1)}
-                              disabled={product.quantity === 0}
-                              title="Decrease quantity"
-                              id={`qty-minus-${product.id}`}
-                            >
-                              −
-                            </button>
-                            <span
-                              className={`quantity-badge ${getStockClass(
-                                product.quantity
-                              )}`}
-                            >
-                              {product.quantity}
-                            </span>
-                            <button
-                              className="qty-btn qty-plus"
-                              onClick={() => handleInlineQuantityChange(product, 1)}
-                              title="Increase quantity"
-                              id={`qty-plus-${product.id}`}
-                            >
-                              +
-                            </button>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="actions">
-                            <button
-                              className="btn-icon"
-                              onClick={() => openEdit(product)}
-                              title="Edit product"
-                            >
-                              ✏️ Edit
-                            </button>
-                            <button
-                              className="btn-icon btn-danger"
-                              onClick={() => setDeleteProduct(product)}
-                              title="Delete product"
-                            >
-                              🗑️ Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="pagination-footer">
-                <button 
-                  className="btn-page" 
-                  disabled={page <= 1 || loading}
-                  onClick={() => setPage((p: number) => p - 1)}
-                >
-                  {isRTL ? "التالي ←" : "← Previous"}
-                </button>
-                <span className="page-info">
-                  {t("page") || "Page"} <strong>{page}</strong> {t("of") || "of"} <strong>{totalPages}</strong>
-                </span>
-                <button 
-                  className="btn-page" 
-                  disabled={page >= totalPages || loading}
-                  onClick={() => setPage((p: number) => p + 1)}
-                >
-                  {isRTL ? "→ السابق" : "Next →"}
-                </button>
-              </div>
-            </>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Edit Modal */}
       {editProduct && (
         <div className="modal-overlay" onClick={() => setEditProduct(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Edit Product</h3>
+            <h3>Edit {editProduct.name}</h3>
             <div className="form-group" style={{ marginBottom: 16 }}>
-              <label htmlFor="edit-name">Name *</label>
-                <input
-                  id="edit-name"
-                  type="text"
-                  value={editName}
-                  onChange={(e) => {
-                    setEditName(e.target.value);
-                    if (editErrors.name)
-                      setEditErrors((p: FormErrors) => ({ ...p, name: undefined }));
-                  }}
-                  className={editErrors.name ? "input-error" : ""}
-                />
-                {editErrors.name && <span className="error-text">{editErrors.name}</span>}
-              </div>
-            <div className="form-group" style={{ marginBottom: 16 }}>
-              <label htmlFor="edit-sku">SKU</label>
+              <label>Name *</label>
               <input
-                id="edit-sku"
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className={editErrors.name ? "input-error" : ""}
+              />
+              {editErrors.name && <span className="error-text">{editErrors.name}</span>}
+            </div>
+            <div className="form-group" style={{ marginBottom: 16 }}>
+              <label>SKU</label>
+              <input
                 type="text"
                 value={editSku}
                 onChange={(e) => setEditSku(e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label htmlFor="edit-quantity">{t("quantity")}</label>
+            <div className="form-group" style={{ marginBottom: 24 }}>
+              <label>Quantity</label>
               <input
-                id="edit-quantity"
                 type="number"
-                min="0"
-                step="1"
                 value={editQuantity}
-                onChange={(e) => {
-                  setEditQuantity(e.target.value);
-                  if (editErrors.quantity)
-                    setEditErrors((p: FormErrors) => ({ ...p, quantity: undefined }));
-                }}
+                onChange={(e) => setEditQuantity(e.target.value)}
                 className={editErrors.quantity ? "input-error" : ""}
               />
               {editErrors.quantity && <span className="error-text">{editErrors.quantity}</span>}
             </div>
             <div className="modal-actions">
-              <button
-                className="btn-cancel"
-                onClick={() => setEditProduct(null)}
-              >
-                {t("cancel")}
-              </button>
+              <button className="btn-cancel" onClick={() => setEditProduct(null)}>Cancel</button>
               <button className="btn-save" onClick={handleEdit} disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "..." : t("save")}
+                {updateMutation.isPending ? "..." : "Save Changes"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Modal */}
       {deleteProduct && (
         <div className="modal-overlay" onClick={() => setDeleteProduct(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>{t("deleteProduct") || "Delete Product"}</h3>
-            <p style={{ color: "var(--text-secondary)", marginBottom: 4 }}>
-              {isRTL ? "هل أنت متأكد أنك تريد حذف" : "Are you sure you want to delete"}{" "}
-              <strong style={{ color: "var(--text-primary)" }}>
-                {deleteProduct.name}
-              </strong>
-              ?
-            </p>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
-              {isRTL ? "هذا الإجراء لا يمكن التراجع عنه." : "This action cannot be undone."}
+            <h3>Delete Product?</h3>
+            <p className="text-secondary" style={{ marginBottom: 16 }}>
+              Are you sure you want to delete <strong>{deleteProduct.name}</strong>? This action is permanent.
             </p>
             <div className="modal-actions">
-              <button
-                className="btn-cancel"
-                onClick={() => setDeleteProduct(null)}
-                disabled={deleteMutation.isPending}
-              >
-                {t("cancel")}
-              </button>
+              <button className="btn-cancel" onClick={() => setDeleteProduct(null)}>Cancel</button>
               <button className="btn-delete-confirm" onClick={handleDelete} disabled={deleteMutation.isPending}>
-                {deleteMutation.isPending ? "..." : t("delete")}
+                {deleteMutation.isPending ? "..." : "Delete Permanently"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <div className={`toast toast-${toast.type}`}>{toast.message}</div>
       )}

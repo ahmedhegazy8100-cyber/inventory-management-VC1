@@ -15,16 +15,25 @@ import {
   LayoutDashboard,
   LogOut
 } from "lucide-react";
+import Link from "next/link";
 import "./globals.css";
+
 
 export interface Product {
   id: string;
   name: string;
   sku: string | null;
+  barcode: string | null;
   quantity: number;
+  price: number;
+  purchasePrice: number;
+  expiryDate: string | null;
+  batchNumber: string | null;
+  targetQuantity: number;
   createdAt: string;
   updatedAt: string;
 }
+
 
 interface FormErrors {
   name?: string;
@@ -51,15 +60,24 @@ export default function Home() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [formName, setFormName] = useState("");
   const [formSku, setFormSku] = useState("");
+  const [formBarcode, setFormBarcode] = useState("");
   const [formQuantity, setFormQuantity] = useState("0");
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [formPrice, setFormPrice] = useState("0");
+  const [formTargetQuantity, setFormTargetQuantity] = useState("100");
+  const [formExpiry, setFormExpiry] = useState("");
+  const [formErrors, setFormErrors] = useState<any>({});
 
   // Edit modal
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [editName, setEditName] = useState("");
   const [editSku, setEditSku] = useState("");
+  const [editBarcode, setEditBarcode] = useState("");
   const [editQuantity, setEditQuantity] = useState("");
-  const [editErrors, setEditErrors] = useState<FormErrors>({});
+  const [editPrice, setEditPrice] = useState("");
+  const [editTargetQuantity, setEditTargetQuantity] = useState("100");
+  const [editExpiry, setEditExpiry] = useState("");
+  const [editErrors, setEditErrors] = useState<any>({});
+
 
   // Delete modal
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
@@ -142,6 +160,7 @@ export default function Home() {
       setFormName("");
       setFormSku("");
       setFormQuantity("0");
+      setFormTargetQuantity("100");
       setFormErrors({});
       setShowAddForm(false);
       showToast("Product added successfully!");
@@ -168,6 +187,7 @@ export default function Home() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setEditProduct(null);
+      setEditTargetQuantity("100");
       showToast(t("updatedSuccess") || "Product updated successfully!");
     },
     onError: (err: any) => {
@@ -210,17 +230,27 @@ export default function Home() {
     addMutation.mutate({
       name: formName.trim(),
       sku: formSku.trim() || null,
+      barcode: formBarcode.trim() || null,
       quantity: qty,
+      price: Number(formPrice),
+      targetQuantity: Number(formTargetQuantity),
+      expiryDate: formExpiry || null,
     });
+
   };
 
   const openEdit = (product: Product) => {
     setEditProduct(product);
     setEditName(product.name);
     setEditSku(product.sku || "");
+    setEditBarcode(product.barcode || "");
     setEditQuantity(String(product.quantity));
+    setEditPrice(String(product.price || 0));
+    setEditTargetQuantity(String(product.targetQuantity || 100));
+    setEditExpiry(product.expiryDate ? new Date(product.expiryDate).toISOString().split('T')[0] : "");
     setEditErrors({});
   };
+
 
   const handleEdit = async () => {
     if (!editProduct) return;
@@ -242,9 +272,13 @@ export default function Home() {
       data: {
         name: editName.trim(),
         sku: editSku.trim() || null,
+        barcode: editBarcode.trim() || null,
         quantity: qty,
+        price: Number(editPrice),
+        expiryDate: editExpiry || null,
       },
     });
+
   };
 
   const handleDelete = async () => {
@@ -281,6 +315,16 @@ export default function Home() {
   if (!user) return null;
 
   const lowStockCount = products.filter((p: Product) => p.quantity < 50).length;
+  
+  const expiringSoonCount = products.filter((p: Product) => {
+    if (!p.expiryDate) return false;
+    const expiry = new Date(p.expiryDate);
+    const today = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(today.getDate() + 30);
+    return expiry > today && expiry <= thirtyDaysFromNow;
+  }).length;
+
 
   return (
     <div className="page-fade-in">
@@ -293,6 +337,9 @@ export default function Home() {
           <p className="text-secondary">{t("welcomeBack") || "Welcome back"}, {user.name}</p>
         </div>
         <div className="header-actions">
+          <Link href="/mobile/scan" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '12px', background: 'var(--card-bg)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', textDecoration: 'none' }}>
+             <Search size={18} /> Mobile POS
+          </Link>
           <button onClick={() => setShowAddForm(true)} className="btn-add" style={{ marginTop: 0 }}>
             <Plus size={18} /> {t("addProduct")}
           </button>
@@ -300,6 +347,7 @@ export default function Home() {
             <LogOut size={18} /> {t("logout")}
           </button>
         </div>
+
       </header>
 
       {/* Bento Grid Metrics */}
@@ -329,6 +377,16 @@ export default function Home() {
             <p className="metric-subtext">{t("allGood") || "Inventory stable"}</p>
           </div>
         </div>
+
+        <div className={`card bento-card ${expiringSoonCount > 0 ? 'metric-error' : 'metric-muted'}`}>
+          <div className="bento-icon"><Archive size={32} /></div>
+          <div>
+            <div className="metric-label">{t("expiringSoon") || "Expiring Soon"}</div>
+            <div className="metric-value">{expiringSoonCount}</div>
+            <p className="metric-subtext">{t("within30Days") || "Items expiring within 30 days"}</p>
+          </div>
+        </div>
+
       </div>
 
       <style jsx>{`
@@ -386,6 +444,9 @@ export default function Home() {
         .metric-warning .bento-icon { color: var(--warning); }
         .metric-success .bento-icon { color: var(--success); }
         .metric-primary .bento-icon { color: var(--accent); }
+        .metric-error .bento-icon { color: #ef4444; }
+        .metric-muted .bento-icon { color: var(--text-muted); }
+
 
         .inventory-card {
           padding: 0;
@@ -487,24 +548,77 @@ export default function Home() {
                 />
                 {formErrors.name && <span className="error-text">{formErrors.name}</span>}
               </div>
-              <div className="form-group" style={{ marginBottom: 16 }}>
-                <label>SKU</label>
-                <input
-                  type="text"
-                  value={formSku}
-                  onChange={(e) => setFormSku(e.target.value)}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 16 }}>
+                <div className="form-group">
+                  <label>SKU</label>
+                  <input
+                    type="text"
+                    value={formSku}
+                    onChange={(e) => setFormSku(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Barcode</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      value={formBarcode}
+                      onChange={(e) => setFormBarcode(e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setFormBarcode(Math.random().toString().slice(2, 11))}
+                      style={{ padding: '0 8px', fontSize: '12px', background: 'var(--accent)', borderRadius: '4px' }}
+                    >
+                      Gen
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="form-group" style={{ marginBottom: 24 }}>
-                <label>Quantity</label>
-                <input
-                  type="number"
-                  value={formQuantity}
-                  onChange={(e) => setFormQuantity(e.target.value)}
-                  className={formErrors.quantity ? "input-error" : ""}
-                />
-                {formErrors.quantity && <span className="error-text">{formErrors.quantity}</span>}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
+                <div className="form-group">
+                  <label>Price ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formPrice}
+                    onChange={(e) => setFormPrice(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Quantity</label>
+                  <input
+                    type="number"
+                    value={formQuantity}
+                    onChange={(e) => setFormQuantity(e.target.value)}
+                    className={formErrors.quantity ? "input-error" : ""}
+                  />
+                  {formErrors.quantity && <span className="error-text">{formErrors.quantity}</span>}
+                </div>
               </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
+                <div className="form-group">
+                  <label>{t("targetStock") || "Target Stock"}</label>
+                  <input
+                    type="number"
+                    value={formTargetQuantity}
+                    onChange={(e) => setFormTargetQuantity(e.target.value)}
+                  />
+                  <p className="help-text" style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {t("thresholdInfo")}
+                  </p>
+                </div>
+                <div className="form-group">
+                  <label>{t("expiryDate") || "Expiry Date"}</label>
+                  <input
+                    type="date"
+                    value={formExpiry}
+                    onChange={(e) => setFormExpiry(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={() => setShowAddForm(false)}>Cancel</button>
                 <button type="submit" className="btn-save" disabled={addMutation.isPending}>
@@ -531,24 +645,74 @@ export default function Home() {
               />
               {editErrors.name && <span className="error-text">{editErrors.name}</span>}
             </div>
-            <div className="form-group" style={{ marginBottom: 16 }}>
-              <label>SKU</label>
-              <input
-                type="text"
-                value={editSku}
-                onChange={(e) => setEditSku(e.target.value)}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 16 }}>
+              <div className="form-group">
+                <label>SKU</label>
+                <input
+                  type="text"
+                  value={editSku}
+                  onChange={(e) => setEditSku(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label>Barcode</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    value={editBarcode}
+                    onChange={(e) => setEditBarcode(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setEditBarcode(Math.random().toString().slice(2, 11))}
+                    style={{ padding: '0 8px', fontSize: '12px', background: 'var(--accent)', borderRadius: '4px' }}
+                  >
+                    Gen
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="form-group" style={{ marginBottom: 24 }}>
-              <label>Quantity</label>
-              <input
-                type="number"
-                value={editQuantity}
-                onChange={(e) => setEditQuantity(e.target.value)}
-                className={editErrors.quantity ? "input-error" : ""}
-              />
-              {editErrors.quantity && <span className="error-text">{editErrors.quantity}</span>}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
+              <div className="form-group">
+                <label>Price ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label>Quantity</label>
+                <input
+                  type="number"
+                  value={editQuantity}
+                  onChange={(e) => setEditQuantity(e.target.value)}
+                  className={editErrors.quantity ? "input-error" : ""}
+                />
+                {editErrors.quantity && <span className="error-text">{editErrors.quantity}</span>}
+              </div>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
+              <div className="form-group">
+                <label>{t("targetStock") || "Target Stock"}</label>
+                <input
+                  type="number"
+                  value={editTargetQuantity}
+                  onChange={(e) => setEditTargetQuantity(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label>{t("expiryDate") || "Expiry Date"}</label>
+                <input
+                  type="date"
+                  value={editExpiry}
+                  onChange={(e) => setEditExpiry(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="modal-actions">
               <button className="btn-cancel" onClick={() => setEditProduct(null)}>Cancel</button>
               <button className="btn-save" onClick={handleEdit} disabled={updateMutation.isPending}>

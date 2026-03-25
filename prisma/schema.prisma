@@ -11,16 +11,42 @@ model Product {
   id            String     @id @default(uuid())
   name          String
   sku           String?
+  barcode       String?    @unique
   quantity      Int        @default(0)
+  targetQuantity Int       @default(100)
+  price         Float      @default(0)
+  purchasePrice Float      @default(0)
+  expiryDate    DateTime?
+  batchNumber   String?
   ignoreRestock Boolean    @default(false)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   deletedAt     DateTime?
   orders        Order[]
+  saleItems     SaleItem[]
 
   @@index([name])
   @@index([sku])
+  @@index([barcode])
 }
+
+model Sale {
+  id          String     @id @default(uuid())
+  totalAmount Float
+  createdAt   DateTime   @default(now())
+  items       SaleItem[]
+}
+
+model SaleItem {
+  id        String  @id @default(uuid())
+  saleId    String
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float   // Price at the time of sale
+}
+
 
 model AuditLog {
   id        String   @id @default(uuid())

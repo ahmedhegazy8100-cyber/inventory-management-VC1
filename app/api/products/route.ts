@@ -56,13 +56,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ errors }, { status: 400 });
   }
 
-  const { name, sku, quantity } = validation.data;
+  const { name, sku, quantity, barcode, price, purchasePrice, expiryDate, batchNumber, targetQuantity } = validation.data;
 
   const product = await prisma.product.create({
     data: {
       name,
       sku: sku || null,
+      barcode: barcode || null,
       quantity,
+      price: price || 0,
+      purchasePrice: purchasePrice || 0,
+      expiryDate: expiryDate || null,
+      batchNumber: batchNumber || null,
+      targetQuantity,
     },
   });
 
@@ -71,9 +77,10 @@ export async function POST(request: NextRequest) {
       action: "CREATE",
       entity: "Product",
       entityId: product.id,
-      details: `Added "${product.name}"${product.sku ? ` (SKU: ${product.sku})` : ""} with quantity ${product.quantity}`,
+      details: `Added "${product.name}"${product.barcode ? ` (Barcode: ${product.barcode})` : ""} with quantity ${product.quantity} and price ${product.price}`,
     },
   });
+
 
   return NextResponse.json(product, { status: 201 });
 }

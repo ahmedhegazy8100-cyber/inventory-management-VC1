@@ -47,16 +47,20 @@ export function ProductTable({
         <thead>
           <tr>
             <th>{t("name")}</th>
-            <th>{t("sku")}</th>
+            <th>{t("barcode") || "Barcode"}</th>
+            <th>{t("price") || "Price"}</th>
             <th>{t("quantity")}</th>
             <th>{t("actions")}</th>
+
           </tr>
         </thead>
         <tbody>
           {products.map((product, i) => (
             <tr key={product.id} style={{ animationDelay: `${i * 0.02}s` }}>
               <td className="product-name">{product.name}</td>
-              <td className="product-sku">{product.sku || "—"}</td>
+              <td className="product-sku">{product.barcode || product.sku || "—"}</td>
+              <td className="product-price font-bold">${(product.price || 0).toFixed(2)}</td>
+
               <td>
                 <div className="quantity-controls">
                   <button

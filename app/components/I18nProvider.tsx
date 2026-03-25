@@ -42,6 +42,8 @@ const translations = {
     notes: "Notes",
     submitOrder: "Submit Order",
     ignoring: "Ignore",
+    targetStock: "Target Stock (10% Threshold)",
+    thresholdInfo: "System will auto-order when quantity falls below 10% of this value.",
   },
   ar: {
     inventory: "المخزون",
@@ -73,6 +75,8 @@ const translations = {
     notes: "ملاحظات",
     submitOrder: "إرسال الطلب",
     ignoring: "تجاهل",
+    targetStock: "المخزون المستهدف (حد 10%)",
+    thresholdInfo: "سيقوم النظام بطلب تلقائي عندما تنخفض الكمية عن 10% من هذه القيمة.",
   },
 };
 

@@ -19,7 +19,8 @@ export async function PUT(
     return NextResponse.json({ errors }, { status: 400 });
   }
 
-  const { name, sku, quantity } = validation.data;
+  const { name, sku, quantity, barcode, price, purchasePrice, expiryDate, batchNumber, targetQuantity } = validation.data;
+
 
   try {
     // Fetch current product for change comparison
@@ -34,7 +35,14 @@ export async function PUT(
     const data: Record<string, unknown> = {};
     if (name !== undefined) data.name = name.trim();
     if (sku !== undefined) data.sku = sku?.trim() || null;
+    if (barcode !== undefined) data.barcode = barcode?.trim() || null;
     if (quantity !== undefined) data.quantity = Number(quantity);
+    if (price !== undefined) data.price = Number(price);
+    if (purchasePrice !== undefined) data.purchasePrice = Number(purchasePrice);
+    if (expiryDate !== undefined) data.expiryDate = expiryDate || null;
+    if (batchNumber !== undefined) data.batchNumber = batchNumber?.trim() || null;
+    if (targetQuantity !== undefined) data.targetQuantity = Number(targetQuantity);
+
 
     const product = await prisma.product.update({
       where: { id },
@@ -52,6 +60,16 @@ export async function PUT(
     if (quantity !== undefined && existing.quantity !== product.quantity) {
       changes.push(`quantity ${existing.quantity} → ${product.quantity}`);
     }
+    if (barcode !== undefined && existing.barcode !== product.barcode) {
+      changes.push(`barcode "${existing.barcode || "—"}" → "${product.barcode || "—"}"`);
+    }
+    if (price !== undefined && existing.price !== product.price) {
+      changes.push(`price ${existing.price} → ${product.price}`);
+    }
+    if (expiryDate !== undefined && existing.expiryDate?.toString() !== product.expiryDate?.toString()) {
+      changes.push(`expiryDate "${existing.expiryDate || "—"}" → "${product.expiryDate || "—"}"`);
+    }
+
 
     await prisma.auditLog.create({
       data: {
@@ -63,6 +81,40 @@ export async function PUT(
           : `Updated "${existing.name}" (no field changes)`,
       },
     });
+
+    // 10% Threshold Auto-Order Logic
+    if (product.quantity < 0.1 * product.targetQuantity && !product.ignoreRestock) {
+      // Check if a PENDING order already exists to avoid duplicates
+      const existingPendingOrder = await prisma.order.findFirst({
+        where: {
+          productId: product.id,
+          status: "PENDING",
+          deletedAt: null
+        }
+      });
+
+      if (!existingPendingOrder) {
+        await prisma.order.create({
+          data: {
+            productId: product.id,
+            providerName: "SYSTEM-AUTO",
+            expectedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+            quantity: Math.max(1, product.targetQuantity - product.quantity),
+            notes: `Auto-generated: Stock fell below 10% threshold (${product.quantity} / ${product.targetQuantity})`,
+            status: "PENDING"
+          }
+        });
+
+        await prisma.auditLog.create({
+          data: {
+            action: "AUTO_ORDER",
+            entity: "Order",
+            entityId: product.id,
+            details: `Automated order created for "${product.name}" due to low stock threshold.`,
+          },
+        });
+      }
+    }
 
     return NextResponse.json(product);
   } catch {

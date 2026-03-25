@@ -576,6 +576,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
                 <div className="form-group">
                   <label>Price ($)</label>
                   <input
@@ -596,6 +597,7 @@ export default function Home() {
                   {formErrors.quantity && <span className="error-text">{formErrors.quantity}</span>}
                 </div>
               </div>
+
               <div className="form-group" style={{ marginBottom: 24 }}>
                 <label>{t("expiryDate") || "Expiry Date"}</label>
                 <input
@@ -661,6 +663,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
               <div className="form-group">
                 <label>Price ($)</label>
                 <input
@@ -681,6 +684,7 @@ export default function Home() {
                 {editErrors.quantity && <span className="error-text">{editErrors.quantity}</span>}
               </div>
             </div>
+
             <div className="form-group" style={{ marginBottom: 24 }}>
               <label>{t("expiryDate") || "Expiry Date"}</label>
               <input

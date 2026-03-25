@@ -15,7 +15,8 @@ import {
   LayoutDashboard,
   LogOut
 } from "lucide-react";
-import Link from "next/link";
+
+
 import "./globals.css";
 
 
@@ -337,9 +338,8 @@ export default function Home() {
           <p className="text-secondary">{t("welcomeBack") || "Welcome back"}, {user.name}</p>
         </div>
         <div className="header-actions">
-          <Link href="/mobile/scan" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '12px', background: 'var(--card-bg)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', textDecoration: 'none' }}>
-             <Search size={18} /> Mobile POS
-          </Link>
+
+
           <button onClick={() => setShowAddForm(true)} className="btn-add" style={{ marginTop: 0 }}>
             <Plus size={18} /> {t("addProduct")}
           </button>
@@ -539,7 +539,8 @@ export default function Home() {
             <h3>{t("addProduct")}</h3>
             <form onSubmit={handleAdd}>
               <div className="form-group" style={{ marginBottom: 16 }}>
-                <label>Name *</label>
+                <label>Item name *</label>
+
                 <input
                   type="text"
                   value={formName}
@@ -559,7 +560,8 @@ export default function Home() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Barcode</label>
+                  <label>Item code</label>
+
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <input
                       type="text"
@@ -628,7 +630,8 @@ export default function Home() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>Edit {editProduct.name}</h3>
             <div className="form-group" style={{ marginBottom: 16 }}>
-              <label>Name *</label>
+              <label>Item name *</label>
+
               <input
                 type="text"
                 value={editName}
@@ -648,7 +651,7 @@ export default function Home() {
                 />
               </div>
               <div className="form-group">
-                <label>Barcode</label>
+                <label>Item code</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="text"

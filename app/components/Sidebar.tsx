@@ -5,9 +5,14 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "./I18nProvider";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { Package, Truck, ClipboardList } from "lucide-react";
+import { Package, Truck, ClipboardList, ChevronLeft, ChevronRight } from "lucide-react";
 
-export function Sidebar() {
+interface SidebarProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+}
+
+export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { t, isRTL } = useI18n();
 
@@ -22,8 +27,11 @@ export function Sidebar() {
       <div className="sidebar-header">
         <Link href="/" className="logo-link">
           <span className="logo-icon"><Package size={28} color="var(--accent)" /></span>
-          <span className="logo-text">Inventra</span>
+          {!isCollapsed && <span className="logo-text">Inventra</span>}
         </Link>
+        <button onClick={onToggle} className="toggle-btn" title={isCollapsed ? "Expand" : "Collapse"}>
+          {isCollapsed ? (isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />) : (isRTL ? <ChevronRight size={16} /> : <ChevronLeft size={16} />)}
+        </button>
       </div>
 
       <nav className="side-nav">
@@ -34,9 +42,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={`side-nav-item ${isActive ? "active" : ""}`}
+              title={isCollapsed ? item.name : ""}
             >
               <span className="nav-icon">{item.icon}</span>
-              <span className="nav-text">{item.name}</span>
+              {!isCollapsed && <span className="nav-text">{item.name}</span>}
             </Link>
           );
         })}
@@ -45,22 +54,57 @@ export function Sidebar() {
       <div className="sidebar-footer">
         <div className="sidebar-controls">
           <ThemeToggle />
-          <LanguageSwitcher />
+          {!isCollapsed && <LanguageSwitcher />}
         </div>
-        <div className="sidebar-version">v2.0.26</div>
+        {!isCollapsed && <div className="sidebar-version">v2.0.26</div>}
       </div>
 
       <style jsx>{`
+        .sidebar-header {
+          display: flex;
+          align-items: center;
+          justify-content: ${isCollapsed ? 'center' : 'space-between'};
+          margin-bottom: 32px;
+          padding: 0 8px;
+          position: relative;
+        }
+        .toggle-btn {
+          position: absolute;
+          right: ${isCollapsed ? '-12px' : '-4px'};
+          top: 50%;
+          transform: translateY(-50%);
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
+          color: var(--text-secondary);
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all var(--transition-base);
+          z-index: 10;
+          box-shadow: var(--shadow-sm);
+        }
+        .toggle-btn:hover {
+          color: var(--accent);
+          border-color: var(--accent);
+          transform: translateY(-50%) scale(1.1);
+        }
         .logo-link {
           display: flex;
           align-items: center;
           gap: 12px;
           text-decoration: none;
           padding: 8px;
+          overflow: hidden;
         }
         .logo-icon {
-          font-size: 1.8rem;
-          filter: drop-shadow(0 0 10px var(--accent-glow));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 32px;
         }
         .logo-text {
           font-size: 1.4rem;
@@ -69,6 +113,7 @@ export function Sidebar() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           letter-spacing: -0.03em;
+          white-space: nowrap;
         }
         .sidebar-footer {
           margin-top: auto;
@@ -83,6 +128,7 @@ export function Sidebar() {
           align-items: center;
           gap: 12px;
           justify-content: center;
+          flex-direction: ${isCollapsed ? 'column' : 'row'};
         }
         .sidebar-version {
           font-size: 0.7rem;
@@ -96,6 +142,11 @@ export function Sidebar() {
           align-items: center;
           justify-content: center;
           color: inherit;
+          min-width: 24px;
+        }
+        .nav-text {
+          white-space: nowrap;
+          opacity: 1;
         }
       `}</style>
     </aside>

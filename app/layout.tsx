@@ -4,12 +4,10 @@ import Providers from "./Providers";
 import { I18nProvider } from "./components/I18nProvider";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { Sidebar } from "./components/Sidebar";
+import { LayoutWrapper } from "./components/LayoutWrapper";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Inventra | Modern Inventory SaaS",
-  description: "Enterprise-grade inventory management powered by operational intelligence",
-};
+// ... (skipping metadata)
 
 export default async function RootLayout({
   children,
@@ -26,14 +24,9 @@ export default async function RootLayout({
           <ThemeProvider>
             <Providers>
               {isAuthenticated ? (
-                <div className="app-wrapper">
-                  <Sidebar />
-                  <main className="main-content">
-                    <div className="container">
-                      {children}
-                    </div>
-                  </main>
-                </div>
+                <LayoutWrapper>
+                  {children}
+                </LayoutWrapper>
               ) : (
                 <div className="auth-wrapper">
                   {children}

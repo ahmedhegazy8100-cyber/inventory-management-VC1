@@ -30,11 +30,11 @@
 }
 
 [data-theme="dark"] {
-  --bg-primary: #080b11;
-  --bg-secondary: #0f172a;
+  --bg-primary: #0a0e14;
+  --bg-secondary: #111827; /* Softer dark */
   --bg-card: rgba(17, 24, 39, 0.65);
   --bg-card-hover: rgba(31, 41, 55, 0.8);
-  --bg-input: rgba(15, 23, 42, 0.8);
+  --bg-input: #0f172a; /* Darker input for contrast */
   
   --border-color: rgba(255, 255, 255, 0.08);
   --border-focus: rgba(99, 102, 241, 0.5);
@@ -51,25 +51,26 @@
 }
 
 [data-theme="light"] {
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.8);
-  --bg-card-hover: rgba(255, 255, 255, 1);
-  --bg-input: #f1f5f9;
+  --bg-primary: #f1f5f9; /* Softer than stark white */
+  --bg-secondary: #fdfdfd; /* Very slightly off-white for the modal */
+  --bg-card: #ffffff;
+  --bg-card-hover: #ffffff;
+  --bg-input: #f8fafc; /* Subtle difference for the text box */
   
-  --border-color: rgba(0, 0, 0, 0.08);
-  --border-focus: rgba(99, 102, 241, 0.4);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-focus: #6366f1;
   
-  --text-primary: #0f172a;
+  --text-primary: #1e293b;
   --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-muted: #64748b;
   
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 8px 24px rgba(149, 157, 165, 0.2);
+  --shadow-lg: 0 12px 32px rgba(149, 157, 165, 0.3);
 
-  --sidebar-bg: rgba(255, 255, 255, 0.95);
+  --sidebar-bg: #ffffff;
 }
+
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -122,12 +123,19 @@ body::before {
   border-right: 1px solid var(--border-color);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  padding: 32px 20px;
+  padding: 32px 12px; /* Reduced side padding */
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
   height: 100vh;
+  transition: width var(--transition-base), padding var(--transition-base);
+  z-index: 100;
+}
+
+.sidebar-collapsed .sidebar {
+  width: 80px;
+  padding: 32px 8px;
 }
 
 .sidebar-header {
@@ -187,6 +195,11 @@ body::before {
   transform: translateX(4px);
 }
 
+.sidebar-collapsed .side-nav-item:hover, 
+.sidebar-collapsed .side-nav-item.active {
+  transform: none;
+}
+
 [dir="rtl"] .side-nav-item:hover, [dir="rtl"] .side-nav-item.active {
   transform: translateX(-4px);
 }
@@ -201,6 +214,7 @@ body::before {
   padding: 32px;
   overflow-y: auto;
   position: relative;
+  transition: padding var(--transition-base);
 }
 
 .container {

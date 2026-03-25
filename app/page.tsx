@@ -29,8 +29,8 @@ export interface Product {
   purchasePrice: number;
   expiryDate: string | null;
   batchNumber: string | null;
-  targetQuantity: number;
   createdAt: string;
+
   updatedAt: string;
 }
 
@@ -63,8 +63,8 @@ export default function Home() {
   const [formBarcode, setFormBarcode] = useState("");
   const [formQuantity, setFormQuantity] = useState("0");
   const [formPrice, setFormPrice] = useState("0");
-  const [formTargetQuantity, setFormTargetQuantity] = useState("100");
   const [formExpiry, setFormExpiry] = useState("");
+
   const [formErrors, setFormErrors] = useState<any>({});
 
   // Edit modal
@@ -74,8 +74,8 @@ export default function Home() {
   const [editBarcode, setEditBarcode] = useState("");
   const [editQuantity, setEditQuantity] = useState("");
   const [editPrice, setEditPrice] = useState("");
-  const [editTargetQuantity, setEditTargetQuantity] = useState("100");
   const [editExpiry, setEditExpiry] = useState("");
+
   const [editErrors, setEditErrors] = useState<any>({});
 
 
@@ -160,8 +160,8 @@ export default function Home() {
       setFormName("");
       setFormSku("");
       setFormQuantity("0");
-      setFormTargetQuantity("100");
       setFormErrors({});
+
       setShowAddForm(false);
       showToast("Product added successfully!");
     },
@@ -187,8 +187,8 @@ export default function Home() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setEditProduct(null);
-      setEditTargetQuantity("100");
       showToast(t("updatedSuccess") || "Product updated successfully!");
+
     },
     onError: (err: any) => {
       setEditErrors(err);
@@ -233,9 +233,9 @@ export default function Home() {
       barcode: formBarcode.trim() || null,
       quantity: qty,
       price: Number(formPrice),
-      targetQuantity: Number(formTargetQuantity),
       expiryDate: formExpiry || null,
     });
+
 
   };
 
@@ -246,8 +246,8 @@ export default function Home() {
     setEditBarcode(product.barcode || "");
     setEditQuantity(String(product.quantity));
     setEditPrice(String(product.price || 0));
-    setEditTargetQuantity(String(product.targetQuantity || 100));
     setEditExpiry(product.expiryDate ? new Date(product.expiryDate).toISOString().split('T')[0] : "");
+
     setEditErrors({});
   };
 
@@ -576,7 +576,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
                 <div className="form-group">
                   <label>Price ($)</label>
                   <input
@@ -597,27 +596,16 @@ export default function Home() {
                   {formErrors.quantity && <span className="error-text">{formErrors.quantity}</span>}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
-                <div className="form-group">
-                  <label>{t("targetStock") || "Target Stock"}</label>
-                  <input
-                    type="number"
-                    value={formTargetQuantity}
-                    onChange={(e) => setFormTargetQuantity(e.target.value)}
-                  />
-                  <p className="help-text" style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    {t("thresholdInfo")}
-                  </p>
-                </div>
-                <div className="form-group">
-                  <label>{t("expiryDate") || "Expiry Date"}</label>
-                  <input
-                    type="date"
-                    value={formExpiry}
-                    onChange={(e) => setFormExpiry(e.target.value)}
-                  />
-                </div>
+              <div className="form-group" style={{ marginBottom: 24 }}>
+                <label>{t("expiryDate") || "Expiry Date"}</label>
+                <input
+                  type="date"
+                  value={formExpiry}
+                  onChange={(e) => setFormExpiry(e.target.value)}
+                  className="w-full"
+                />
               </div>
+
 
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={() => setShowAddForm(false)}>Cancel</button>
@@ -673,7 +661,6 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
               <div className="form-group">
                 <label>Price ($)</label>
                 <input
@@ -694,24 +681,16 @@ export default function Home() {
                 {editErrors.quantity && <span className="error-text">{editErrors.quantity}</span>}
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
-              <div className="form-group">
-                <label>{t("targetStock") || "Target Stock"}</label>
-                <input
-                  type="number"
-                  value={editTargetQuantity}
-                  onChange={(e) => setEditTargetQuantity(e.target.value)}
-                />
-              </div>
-              <div className="form-group">
-                <label>{t("expiryDate") || "Expiry Date"}</label>
-                <input
-                  type="date"
-                  value={editExpiry}
-                  onChange={(e) => setEditExpiry(e.target.value)}
-                />
-              </div>
+            <div className="form-group" style={{ marginBottom: 24 }}>
+              <label>{t("expiryDate") || "Expiry Date"}</label>
+              <input
+                type="date"
+                value={editExpiry}
+                onChange={(e) => setEditExpiry(e.target.value)}
+                className="w-full"
+              />
             </div>
+
 
             <div className="modal-actions">
               <button className="btn-cancel" onClick={() => setEditProduct(null)}>Cancel</button>

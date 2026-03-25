@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "./../components/I18nProvider";
+import { AlertCircle, Truck, Package, X, CheckCircle2 } from "lucide-react";
 import "./../globals.css";
 
 interface Product {
@@ -158,15 +159,18 @@ export default function OrdersPage() {
     <div className="page-fade-in">
       <header className="page-header">
         <div>
-          <h1>{t("orders") || "Orders Management"}</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Truck size={28} color="var(--accent)" />
+            {t("orders") || "Orders Management"}
+          </h1>
           <p className="text-secondary">{t("manageShipments") || "Track and restock your inventory"}</p>
         </div>
       </header>
 
       {/* Suggestions Section */}
       <div className="card" style={{ marginBottom: "32px", borderLeft: "4px solid var(--warning)" }}>
-        <div className="card-title">
-          <span className="icon">⚠️</span> {t("lowStock")}
+        <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertCircle size={20} color="var(--warning)" /> {t("lowStock")}
         </div>
         <p style={{ color: "var(--text-secondary)", marginBottom: "24px", fontSize: "0.95rem" }}>
           {isRTL ? "هذه العناصر شارفت على النفاد. نوصي بإعادة طلبها الآن." : "These items are running low. We recommend restocking them immediately."}
@@ -178,7 +182,7 @@ export default function OrdersPage() {
           </div>
         ) : suggestions.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">✨</div>
+            <div className="empty-icon" style={{ color: 'var(--success)' }}><CheckCircle2 size={48} /></div>
             <h3>{isRTL ? "المخزون مكتمل" : "Stock is Optimal"}</h3>
             <p>{isRTL ? "لا توجد عناصر تحتاج إلى إعادة طلب حالياً." : "No items require restocking at this time."}</p>
           </div>
@@ -205,18 +209,18 @@ export default function OrdersPage() {
                       <div className="actions">
                         <button
                           className="btn-icon"
-                          style={{ color: "var(--text-muted)" }}
+                          style={{ color: "var(--text-muted)", display: 'flex', alignItems: 'center', gap: '6px' }}
                           onClick={() => handleIgnore(prod.id)}
                           disabled={ignoreMutation.isPending}
                         >
-                          {ignoreMutation.isPending ? "..." : `✖️ ${t("ignoring")}`}
+                          {ignoreMutation.isPending ? "..." : <><X size={14} /> {t("ignoring")}</>}
                         </button>
                         <button
                           className="btn-add"
-                          style={{ marginTop: 0, padding: '8px 16px' }}
+                          style={{ marginTop: 0, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
                           onClick={() => openOrderModal(prod)}
                         >
-                          📦 {t("placeOrder")}
+                          <Package size={16} /> {t("placeOrder")}
                         </button>
                       </div>
                     </td>
@@ -231,8 +235,8 @@ export default function OrdersPage() {
       {/* Active Orders Section */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div className="inventory-card-header" style={{ padding: '24px 32px', borderBottom: '1px solid var(--border-color)' }}>
-          <div className="card-title" style={{ marginBottom: 0 }}>
-            <span className="icon">🚚</span> {t("activeOrders")}
+          <div className="card-title" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Truck size={20} color="var(--accent)" /> {t("activeOrders")}
           </div>
         </div>
         

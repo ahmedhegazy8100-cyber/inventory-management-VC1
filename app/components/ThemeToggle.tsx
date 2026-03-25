@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "./ThemeProvider";
+import { Moon, Sun } from "lucide-react";
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
@@ -11,7 +12,9 @@ export function ThemeToggle() {
       className="theme-toggle"
       title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
     >
-      <span className="icon">{theme === "light" ? "🌙" : "☀️"}</span>
+      <span className="icon">
+        {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+      </span>
 
       <style jsx>{`
         .theme-toggle {

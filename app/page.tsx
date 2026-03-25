@@ -4,6 +4,17 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "./components/I18nProvider";
 import { ProductTable } from "./components/ProductTable";
+import { 
+  BarChart3, 
+  AlertTriangle, 
+  TrendingUp, 
+  Plus, 
+  Search, 
+  Archive, 
+  Folder,
+  LayoutDashboard,
+  LogOut
+} from "lucide-react";
 import "./globals.css";
 
 export interface Product {
@@ -275,21 +286,26 @@ export default function Home() {
     <div className="page-fade-in">
       <header className="page-header">
         <div>
-          <h1>{t("dashboard") || "Dashboard Overview"}</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <LayoutDashboard size={28} color="var(--accent)" />
+            {t("dashboard") || "Dashboard Overview"}
+          </h1>
           <p className="text-secondary">{t("welcomeBack") || "Welcome back"}, {user.name}</p>
         </div>
         <div className="header-actions">
           <button onClick={() => setShowAddForm(true)} className="btn-add" style={{ marginTop: 0 }}>
-            <span>➕</span> {t("addProduct")}
+            <Plus size={18} /> {t("addProduct")}
           </button>
-          <button onClick={handleLogout} className="btn-logout">{t("logout")}</button>
+          <button onClick={handleLogout} className="btn-logout">
+            <LogOut size={18} /> {t("logout")}
+          </button>
         </div>
       </header>
 
       {/* Bento Grid Metrics */}
       <div className="bento-grid">
         <div className="card bento-card metric-primary">
-          <div className="bento-icon">📊</div>
+          <div className="bento-icon"><BarChart3 size={32} /></div>
           <div>
             <div className="metric-label">{t("totalItems") || "Total Items"}</div>
             <div className="metric-value">{totalProducts}</div>
@@ -297,7 +313,7 @@ export default function Home() {
         </div>
         
         <div className="card bento-card metric-warning">
-          <div className="bento-icon">⚠️</div>
+          <div className="bento-icon"><AlertTriangle size={32} /></div>
           <div>
             <div className="metric-label">{t("lowStock") || "Alerts"}</div>
             <div className="metric-value">{lowStockCount}</div>
@@ -306,7 +322,7 @@ export default function Home() {
         </div>
 
         <div className="card bento-card metric-success">
-          <div className="bento-icon">📈</div>
+          <div className="bento-icon"><TrendingUp size={32} /></div>
           <div>
             <div className="metric-label">{t("healthyStock") || "Healthy"}</div>
             <div className="metric-value">{totalProducts - lowStockCount}</div>
@@ -395,12 +411,12 @@ export default function Home() {
       {/* Inventory Section */}
       <div className="card inventory-card">
         <div className="inventory-card-header">
-          <div className="card-title" style={{ marginBottom: 0 }}>
-            <span className="icon">📋</span> {t("inventory") || "Inventory"}
+          <div className="card-title" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Archive size={20} color="var(--accent)" /> {t("inventory") || "Inventory"}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <div className="search-wrapper" style={{ width: 260 }}>
-              <span className="search-icon">🔍</span>
+              <span className="search-icon"><Search size={16} /></span>
               <input
                 type="text"
                 className="search-input"
@@ -415,8 +431,10 @@ export default function Home() {
             <button 
               className={`btn-icon ${showArchived ? 'active' : ''}`}
               onClick={() => setShowArchived(!showArchived)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
             >
-              {showArchived ? "📂" : "📁"} {t("archived")}
+              {showArchived ? <Archive size={16} /> : <Folder size={16} />} 
+              {t("archived")}
             </button>
           </div>
         </div>

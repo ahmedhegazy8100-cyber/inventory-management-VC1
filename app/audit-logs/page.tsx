@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "./../components/I18nProvider";
+import { History, ClipboardList, Database, FileText } from "lucide-react";
 import "./../globals.css";
 
 interface AuditLog {
@@ -28,15 +29,18 @@ export default function AuditLogsPage() {
     <div className="page-fade-in">
       <header className="page-header">
         <div>
-          <h1>{t("auditLogs") || "Audit Logs"}</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <History size={28} color="var(--accent)" />
+            {t("auditLogs") || "Audit Logs"}
+          </h1>
           <p className="text-secondary">{t("systemActivity") || "Track all system changes and actions"}</p>
         </div>
       </header>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div className="inventory-card-header" style={{ padding: '24px 32px', borderBottom: '1px solid var(--border-color)' }}>
-          <div className="card-title" style={{ marginBottom: 0 }}>
-            <span className="icon">📝</span> {isRTL ? "سجل العمليات" : "Recent Activity"}
+          <div className="card-title" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <ClipboardList size={20} color="var(--shadow-lg)" /> {isRTL ? "سجل العمليات" : "Recent Activity"}
           </div>
         </div>
         

@@ -2,6 +2,7 @@
 
 import { Product } from "../page";
 import { useI18n } from "./I18nProvider";
+import { Edit2, Trash2 } from "lucide-react";
 
 interface ProductTableProps {
   products: any[];
@@ -79,10 +80,10 @@ export function ProductTable({
               <td>
                 <div className="actions">
                   <button className="btn-icon" onClick={() => onEdit(product)}>
-                    ✏️ {t("edit")}
+                    <Edit2 size={16} /> {t("edit")}
                   </button>
                   <button className="btn-icon btn-danger" onClick={() => onDelete(product)}>
-                    🗑️ {t("delete")}
+                    <Trash2 size={16} /> {t("delete")}
                   </button>
                 </div>
               </td>

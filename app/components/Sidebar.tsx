@@ -5,22 +5,23 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "./I18nProvider";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { Package, Truck, ClipboardList } from "lucide-react";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { t, isRTL } = useI18n();
 
   const navItems = [
-    { name: t("inventory") || "Inventory", href: "/", icon: "📦" },
-    { name: t("orders") || "Orders", href: "/orders", icon: "🚚" },
-    { name: t("auditLogs") || "Audit Logs", href: "/audit-logs", icon: "📋" },
+    { name: t("inventory") || "Inventory", href: "/", icon: <Package size={18} /> },
+    { name: t("orders") || "Orders", href: "/orders", icon: <Truck size={18} /> },
+    { name: t("auditLogs") || "Audit Logs", href: "/audit-logs", icon: <ClipboardList size={18} /> },
   ];
 
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
         <Link href="/" className="logo-link">
-          <span className="logo-icon">📦</span>
+          <span className="logo-icon"><Package size={28} color="var(--accent)" /></span>
           <span className="logo-text">Inventra</span>
         </Link>
       </div>
@@ -91,7 +92,10 @@ export function Sidebar() {
           letter-spacing: 0.05em;
         }
         .nav-icon {
-          font-size: 1.1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: inherit;
         }
       `}</style>
     </aside>

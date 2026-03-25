@@ -398,7 +398,9 @@ body::before {
   font-family: inherit;
   transition: all var(--transition);
   outline: none;
+  width: 100%;
 }
+
 
 .form-group input:focus {
   border-color: var(--border-focus);
@@ -746,7 +748,8 @@ tbody td {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 28px;
-  width: 400px;
+  width: 500px;
+
   max-width: 90vw;
   box-shadow: var(--shadow-lg);
   animation: slideUp 0.2s ease-out;

@@ -548,7 +548,8 @@ export default function Home() {
                 />
                 {formErrors.name && <span className="error-text">{formErrors.name}</span>}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 16 }}>
+
                 <div className="form-group">
                   <label>SKU</label>
                   <input
@@ -576,7 +577,8 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 24 }}>
+
                 <div className="form-group">
                   <label>Price ($)</label>
                   <input
@@ -635,7 +637,8 @@ export default function Home() {
               />
               {editErrors.name && <span className="error-text">{editErrors.name}</span>}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 16 }}>
+
               <div className="form-group">
                 <label>SKU</label>
                 <input
@@ -663,7 +666,8 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 24 }}>
+
               <div className="form-group">
                 <label>Price ($)</label>
                 <input

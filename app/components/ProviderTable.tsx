@@ -97,6 +97,14 @@ export function ProviderTable({ providers, loading, onEdit, onDelete }: Provider
         .staggered-row {
           animation: slideInLeft 0.4s ease-out forwards;
           opacity: 0;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .staggered-row:hover {
+          background: rgba(255, 255, 255, 0.03) !important;
+          transform: translateY(-2px) scale(1.002);
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+          z-index: 10;
+          position: relative;
         }
         @keyframes slideInLeft {
           from { opacity: 0; transform: translateX(-10px); }
@@ -108,21 +116,32 @@ export function ProviderTable({ providers, loading, onEdit, onDelete }: Provider
           gap: 6px;
         }
         .status-badge {
-          padding: 4px 12px;
+          padding: 6px 14px;
           border-radius: 999px;
-          font-size: 0.75rem;
-          font-weight: 700;
+          font-size: 0.7rem;
+          font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.06em;
+          transition: all 0.3s;
         }
         .status-badge.active {
-          background: var(--success-bg);
-          color: var(--success);
-          box-shadow: 0 0 10px var(--success-bg);
+          background: rgba(16, 185, 129, 0.2);
+          color: #10b981;
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+          border: 1px solid rgba(16, 185, 129, 0.3);
         }
         .status-badge.inactive {
           background: rgba(148, 163, 184, 0.1);
           color: var(--text-muted);
+          border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        table td {
+          padding: 20px 16px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .product-name {
+          font-weight: 700;
+          color: var(--text-primary);
         }
         .loading-spinner {
           width: 32px;

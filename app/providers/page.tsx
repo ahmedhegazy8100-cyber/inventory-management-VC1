@@ -81,11 +81,11 @@ export default function ProvidersPage() {
         </button>
       </header>
 
-      <div className="bento-grid">
+      <div className="kpi-row">
         {stats.map((stat, i) => (
-          <div key={i} className={`card bento-card metric-${stat.color}`}>
-            <div className="bento-icon">{stat.icon}</div>
-            <div>
+          <div key={i} className={`card kpi-card metric-${stat.color}`}>
+            <div className="kpi-icon-wrapper">{stat.icon}</div>
+            <div className="kpi-content">
               <div className="metric-label">{stat.label}</div>
               <div className="metric-value">{stat.value}</div>
             </div>
@@ -110,12 +110,30 @@ export default function ProvidersPage() {
           </div>
         </div>
 
-        <ProviderTable 
-          providers={providers}
-          loading={isLoading}
-          onEdit={openEditModal}
-          onDelete={setDeleteProvider}
-        />
+        {isLoading ? (
+          <div className="skeleton-container">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="skeleton-row" style={{ animationDelay: `${i * 0.1}s` }} />
+            ))}
+          </div>
+        ) : providers.length === 0 ? (
+          <div className="empty-state-elite">
+            <div className="empty-icon-bg">
+              <Users size={80} className="text-muted opacity-10" />
+            </div>
+            <p className="text-secondary">{t("noProviders") || "Your supplier directory is empty."}</p>
+            <button className="btn-add-ghost haptic-btn" onClick={openAddModal}>
+              <Plus size={16} /> {t("addProvider")}
+            </button>
+          </div>
+        ) : (
+          <ProviderTable 
+            providers={providers}
+            loading={false}
+            onEdit={openEditModal}
+            onDelete={setDeleteProvider}
+          />
+        )}
 
         {totalPages > 1 && (
           <div className="pagination-footer">
@@ -161,12 +179,130 @@ export default function ProvidersPage() {
       <style jsx>{`
         .providers-page {
           animation: fadeIn 0.5s ease-out;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
         }
+
+        .kpi-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+        }
+
+        .kpi-card {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          padding: 24px;
+          border-radius: 20px;
+          transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .kpi-card:hover {
+          transform: translateY(-5px);
+        }
+
+        .kpi-icon-wrapper {
+          width: 56px;
+          height: 56px;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(var(--accent-rgb), 0.1);
+          color: var(--accent);
+        }
+
+        .metric-primary .kpi-icon-wrapper { background: rgba(var(--accent-rgb), 0.1); color: var(--accent); }
+        .metric-success .kpi-icon-wrapper { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .metric-error .kpi-icon-wrapper { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+        .metric-label {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 4px;
+        }
+
+        .metric-value {
+          font-size: 1.75rem;
+          font-weight: 800;
+          color: var(--text-primary);
+        }
+
+        .skeleton-container {
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .skeleton-row {
+          height: 48px;
+          background: linear-gradient(90deg, var(--bg-input) 25%, var(--border-color) 50%, var(--bg-input) 75%);
+          background-size: 200% 100%;
+          animation: skeletonLoading 1.5s infinite;
+          border-radius: 12px;
+        }
+
+        @keyframes skeletonLoading {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+
+        .empty-state-elite {
+          padding: 80px 40px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
+          text-align: center;
+        }
+
+        .empty-icon-bg {
+          width: 120px;
+          height: 120px;
+          background: rgba(var(--accent-rgb), 0.03);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 8px;
+        }
+
+        .opacity-10 { opacity: 0.1; }
+
+        .btn-add-ghost {
+          background: transparent;
+          border: 1px dashed var(--border-color);
+          color: var(--accent);
+          padding: 10px 20px;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.2s;
+        }
+
+        .btn-add-ghost:hover {
+          background: rgba(var(--accent-rgb), 0.05);
+          border-style: solid;
+        }
+
         .haptic-btn {
           transition: transform 0.1s;
         }
         .haptic-btn:active {
           transform: scale(0.95);
+        }
+
+        @media (max-width: 900px) {
+          .kpi-row { grid-template-columns: 1fr; }
         }
       `}</style>
     </div>

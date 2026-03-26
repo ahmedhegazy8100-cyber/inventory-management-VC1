@@ -29,10 +29,22 @@ export interface Product {
   price: number;
   purchasePrice: number;
   expiryDate: string | null;
-  batchNumber: string | null;
+  unit: string;
+  providerId: string | null;
+  targetQuantity: number;
+  ignoreRestock: boolean;
+  provider?: Provider;
   createdAt: string;
 
   updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface Provider {
+  id: string;
+  name: string;
+  category: string | null;
+  status: "ACTIVE" | "INACTIVE";
 }
 
 
@@ -65,6 +77,9 @@ export default function Home() {
   const [formQuantity, setFormQuantity] = useState("0");
   const [formPrice, setFormPrice] = useState("0");
   const [formExpiry, setFormExpiry] = useState("");
+  const [formUnit, setFormUnit] = useState("Piece");
+  const [formProviderId, setFormProviderId] = useState("");
+
 
   const [formErrors, setFormErrors] = useState<any>({});
 
@@ -76,12 +91,21 @@ export default function Home() {
   const [editQuantity, setEditQuantity] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editExpiry, setEditExpiry] = useState("");
+  const [editUnit, setEditUnit] = useState("Piece");
+  const [editProviderId, setEditProviderId] = useState("");
+
 
   const [editErrors, setEditErrors] = useState<any>({});
 
 
   // Delete modal
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
+
+  // Provider Management
+  const [showProviders, setShowProviders] = useState(false);
+  const [newProvName, setNewProvName] = useState("");
+  const [newProvCat, setNewProvCat] = useState("");
+
 
   // Toast
   const [toast, setToast] = useState<{
@@ -142,6 +166,29 @@ export default function Home() {
   const totalPages = result?.meta?.totalPages || 1;
   const totalProducts = result?.meta?.total || 0;
 
+  // React Query: Fetch Providers
+  const { data: providers = [] } = useQuery<Provider[]>({
+    queryKey: ["providers"],
+    queryFn: async () => {
+      const res = await fetch("/api/providers");
+      if (!res.ok) throw new Error("Failed to fetch providers");
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
+  const { data: stats } = useQuery({
+    queryKey: ["stats"],
+    queryFn: async () => {
+      const res = await fetch("/api/stats");
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
+
+
   // Mutations
   const addMutation = useMutation({
     mutationFn: async (newProduct: any) => {
@@ -161,7 +208,10 @@ export default function Home() {
       setFormName("");
       setFormSku("");
       setFormQuantity("0");
+      setFormUnit("Piece");
+      setFormProviderId("");
       setFormErrors({});
+
 
       setShowAddForm(false);
       showToast("Product added successfully!");
@@ -235,7 +285,10 @@ export default function Home() {
       quantity: qty,
       price: Number(formPrice),
       expiryDate: formExpiry || null,
+      unit: formUnit,
+      providerId: formProviderId || null,
     });
+
 
 
   };
@@ -248,6 +301,9 @@ export default function Home() {
     setEditQuantity(String(product.quantity));
     setEditPrice(String(product.price || 0));
     setEditExpiry(product.expiryDate ? new Date(product.expiryDate).toISOString().split('T')[0] : "");
+    setEditUnit(product.unit || "Piece");
+    setEditProviderId(product.providerId || "");
+
 
     setEditErrors({});
   };
@@ -277,8 +333,11 @@ export default function Home() {
         quantity: qty,
         price: Number(editPrice),
         expiryDate: editExpiry || null,
+        unit: editUnit,
+        providerId: editProviderId || null,
       },
     });
+
 
   };
 
@@ -340,7 +399,11 @@ export default function Home() {
         <div className="header-actions">
 
 
+          <button onClick={() => setShowProviders(!showProviders)} className="btn-icon">
+            {showProviders ? "Back to Products" : "Manage Suppliers"}
+          </button>
           <button onClick={() => setShowAddForm(true)} className="btn-add" style={{ marginTop: 0 }}>
+
             <Plus size={18} /> {t("addProduct")}
           </button>
           <button onClick={handleLogout} className="btn-logout">
@@ -353,41 +416,25 @@ export default function Home() {
       {/* Bento Grid Metrics */}
       <div className="bento-grid">
         <div className="card bento-card metric-primary">
-          <div className="bento-icon"><BarChart3 size={32} /></div>
+          <div className="bento-icon"><TrendingUp size={32} /></div>
           <div>
-            <div className="metric-label">{t("totalItems") || "Total Items"}</div>
-            <div className="metric-value">{totalProducts}</div>
-          </div>
-        </div>
-        
-        <div className="card bento-card metric-warning">
-          <div className="bento-icon"><AlertTriangle size={32} /></div>
-          <div>
-            <div className="metric-label">{t("lowStock") || "Alerts"}</div>
-            <div className="metric-value">{lowStockCount}</div>
-            <p className="metric-subtext">{t("needsRestock") || "Items needing restock"}</p>
+            <div className="metric-label">{t("invValue") || "Inv. Value"}</div>
+            <div className="metric-value">${stats?.totalValue?.toFixed(2) || "0.00"}</div>
+            <p className="metric-subtext">Total procurement cost</p>
           </div>
         </div>
 
         <div className="card bento-card metric-success">
-          <div className="bento-icon"><TrendingUp size={32} /></div>
+          <div className="bento-icon"><BarChart3 size={32} /></div>
           <div>
-            <div className="metric-label">{t("healthyStock") || "Healthy"}</div>
-            <div className="metric-value">{totalProducts - lowStockCount}</div>
-            <p className="metric-subtext">{t("allGood") || "Inventory stable"}</p>
+            <div className="metric-label">{t("expProfit") || "Exp. Profit"}</div>
+            <div className="metric-value">${stats?.expectedProfit?.toFixed(2) || "0.00"}</div>
+            <p className="metric-subtext">On current stock</p>
           </div>
         </div>
-
-        <div className={`card bento-card ${expiringSoonCount > 0 ? 'metric-error' : 'metric-muted'}`}>
-          <div className="bento-icon"><Archive size={32} /></div>
-          <div>
-            <div className="metric-label">{t("expiringSoon") || "Expiring Soon"}</div>
-            <div className="metric-value">{expiringSoonCount}</div>
-            <p className="metric-subtext">{t("within30Days") || "Items expiring within 30 days"}</p>
-          </div>
-        </div>
-
       </div>
+
+
 
       <style jsx>{`
         .page-header {
@@ -500,14 +547,85 @@ export default function Home() {
           </div>
         </div>
 
-        <ProductTable 
-          products={products}
-          loading={loading}
-          onEdit={openEdit}
-          onDelete={setDeleteProduct}
-          onQuantityChange={handleInlineQuantityChange}
-          getStockClass={getStockClass}
-        />
+        {!showProviders ? (
+          <ProductTable 
+            products={products}
+            loading={loading}
+            onEdit={openEdit}
+            onDelete={setDeleteProduct}
+            onQuantityChange={handleInlineQuantityChange}
+            getStockClass={getStockClass}
+          />
+        ) : (
+          <div className="provider-manager" style={{ padding: '24px 32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '1.2rem' }}>Suppliers / Providers</h2>
+            </div>
+            
+            <div className="card" style={{ background: 'var(--bg-secondary)', marginBottom: '24px', padding: '16px' }}>
+              <h4 style={{ marginBottom: '12px', fontSize: '14px' }}>Add New Supplier</h4>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <input 
+                  placeholder="Supplier Name" 
+                  value={newProvName} 
+                  onChange={e => setNewProvName(e.target.value)} 
+                  style={{ flex: 1 }}
+                />
+                <input 
+                  placeholder="Category (e.g. Dairy)" 
+                  value={newProvCat} 
+                  onChange={e => setNewProvCat(e.target.value)} 
+                  style={{ flex: 1 }}
+                />
+                <button 
+                  className="btn-save"
+                  onClick={async () => {
+                    if (!newProvName) return;
+                    await fetch("/api/providers", {
+                      method: "POST",
+                      body: JSON.stringify({ name: newProvName, category: newProvCat })
+                    });
+                    setNewProvName("");
+                    setNewProvCat("");
+                    queryClient.invalidateQueries({ queryKey: ["providers"] });
+                    showToast("Supplier added!");
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {providers.map(p => (
+                    <tr key={p.id}>
+                      <td>{p.name}</td>
+                      <td>{p.category || "—"}</td>
+                      <td>
+                        <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '10px', background: p.status === 'ACTIVE' ? 'var(--success)' : 'var(--text-muted)' }}>
+                          {p.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {providers.length === 0 && (
+                    <tr><td colSpan={3} style={{ textAlign: 'center', padding: '32px' }}>No suppliers found.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
 
         {products.length > 0 && (
           <div className="pagination-footer">
@@ -549,8 +667,7 @@ export default function Home() {
                 />
                 {formErrors.name && <span className="error-text">{formErrors.name}</span>}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 16 }}>
-
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 24 }}>
                 <div className="form-group">
                   <label>SKU</label>
                   <input
@@ -561,7 +678,6 @@ export default function Home() {
                 </div>
                 <div className="form-group">
                   <label>Item code</label>
-
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <input
                       type="text"
@@ -580,38 +696,29 @@ export default function Home() {
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 24 }}>
-
                 <div className="form-group">
-                  <label>Price ($)</label>
+                  <label>Unit</label>
                   <input
-                    type="number"
-                    step="0.01"
-                    value={formPrice}
-                    onChange={(e) => setFormPrice(e.target.value)}
+                    type="text"
+                    placeholder="e.g. Piece, Box"
+                    value={formUnit}
+                    onChange={(e) => setFormUnit(e.target.value)}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Quantity</label>
-                  <input
-                    type="number"
-                    value={formQuantity}
-                    onChange={(e) => setFormQuantity(e.target.value)}
-                    className={formErrors.quantity ? "input-error" : ""}
-                  />
-                  {formErrors.quantity && <span className="error-text">{formErrors.quantity}</span>}
+                  <label>Provider</label>
+                  <select
+                    value={formProviderId}
+                    onChange={(e) => setFormProviderId(e.target.value)}
+                    style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '11px', color: 'var(--text-primary)' }}
+                  >
+                    <option value="">Select Provider</option>
+                    {providers.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-
-              <div className="form-group" style={{ marginBottom: 24 }}>
-                <label>{t("expiryDate") || "Expiry Date"}</label>
-                <input
-                  type="date"
-                  value={formExpiry}
-                  onChange={(e) => setFormExpiry(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-
 
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={() => setShowAddForm(false)}>Cancel</button>
@@ -619,6 +726,7 @@ export default function Home() {
                   {addMutation.isPending ? "..." : "Add Product"}
                 </button>
               </div>
+
             </form>
           </div>
         </div>
@@ -692,7 +800,32 @@ export default function Home() {
               </div>
             </div>
 
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 24 }}>
+              <div className="form-group">
+                <label>Unit</label>
+                <input
+                  type="text"
+                  value={editUnit}
+                  onChange={(e) => setEditUnit(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label>Provider</label>
+                <select
+                  value={editProviderId}
+                  onChange={(e) => setEditProviderId(e.target.value)}
+                  style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '11px', color: 'var(--text-primary)' }}
+                >
+                  <option value="">Select Provider</option>
+                  {providers.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="form-group" style={{ marginBottom: 24 }}>
+
               <label>{t("expiryDate") || "Expiry Date"}</label>
               <input
                 type="date"

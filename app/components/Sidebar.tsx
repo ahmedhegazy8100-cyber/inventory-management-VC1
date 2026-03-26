@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "./I18nProvider";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { Package, Truck, ClipboardList, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, Truck, ClipboardList, ChevronLeft, ChevronRight, Users } from "lucide-react";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -19,6 +19,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const navItems = [
     { name: t("inventory") || "Inventory", href: "/", icon: <Package size={18} /> },
     { name: t("orders") || "Orders", href: "/orders", icon: <Truck size={18} /> },
+    { name: t("providers") || "Providers", href: "/providers", icon: <Users size={18} /> },
     { name: t("auditLogs") || "Audit Logs", href: "/audit-logs", icon: <ClipboardList size={18} /> },
   ];
 

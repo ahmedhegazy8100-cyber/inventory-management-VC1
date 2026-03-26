@@ -10,7 +10,19 @@ export const productSchema = z.object({
   expiryDate: z.coerce.date().nullable().optional(),
   batchNumber: z.string().trim().nullable().optional(),
   targetQuantity: z.number().int().positive("Target quantity must be a positive number.").default(100),
+  unit: z.string().trim().default("Piece"),
+  providerId: z.string().uuid("Invalid Provider ID.").nullable().optional(),
 });
 
 
+
 export const productUpdateSchema = productSchema.partial();
+
+export const providerSchema = z.object({
+  name: z.string().trim().min(1, "Provider name is required."),
+  category: z.string().trim().nullable().optional(),
+  contactName: z.string().trim().nullable().optional(),
+  email: z.string().trim().email("Invalid email address.").nullable().optional(),
+  phone: z.string().trim().nullable().optional(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
+});

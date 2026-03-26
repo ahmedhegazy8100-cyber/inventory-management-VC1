@@ -27,9 +27,11 @@ export async function GET(request: NextRequest) {
     prisma.product.findMany({
       where,
       orderBy: { quantity: "asc" },
+      include: { provider: true },
       skip,
       take: limit,
     }),
+
     prisma.product.count({ where }),
   ]);
 
@@ -56,7 +58,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ errors }, { status: 400 });
   }
 
-  const { name, sku, quantity, barcode, price, purchasePrice, expiryDate, batchNumber, targetQuantity } = validation.data;
+  const { name, sku, quantity, barcode, price, purchasePrice, expiryDate, batchNumber, targetQuantity, unit, providerId } = validation.data;
+
 
   const product = await prisma.product.create({
     data: {
@@ -69,7 +72,10 @@ export async function POST(request: NextRequest) {
       expiryDate: expiryDate || null,
       batchNumber: batchNumber || null,
       targetQuantity,
+      unit: unit || "Piece",
+      providerId: providerId || null,
     },
+
   });
 
   await prisma.auditLog.create({
@@ -77,7 +83,8 @@ export async function POST(request: NextRequest) {
       action: "CREATE",
       entity: "Product",
       entityId: product.id,
-      details: `Added "${product.name}"${product.barcode ? ` (Barcode: ${product.barcode})` : ""} with quantity ${product.quantity} and price ${product.price}`,
+      details: `Added "${product.name}"${product.barcode ? ` (Barcode: ${product.barcode})` : ""} with quantity ${product.quantity} ${product.unit}(s) and price ${product.price}`,
+
     },
   });
 

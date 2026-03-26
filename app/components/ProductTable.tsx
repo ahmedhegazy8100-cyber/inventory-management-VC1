@@ -49,7 +49,9 @@ export function ProductTable({
             <th>{t("name")}</th>
             <th>{t("barcode") || "Barcode"}</th>
             <th>{t("price") || "Price"}</th>
+            <th>{t("provider") || "Provider"}</th>
             <th>{t("quantity")}</th>
+
             <th>{t("actions")}</th>
 
           </tr>
@@ -60,6 +62,8 @@ export function ProductTable({
               <td className="product-name">{product.name}</td>
               <td className="product-sku">{product.barcode || product.sku || "—"}</td>
               <td className="product-price font-bold">${(product.price || 0).toFixed(2)}</td>
+              <td className="text-secondary" style={{ fontSize: '13px' }}>{product.provider?.name || "—"}</td>
+
 
               <td>
                 <div className="quantity-controls">
@@ -71,8 +75,9 @@ export function ProductTable({
                     −
                   </button>
                   <span className={`quantity-badge ${getStockClass(product.quantity)}`}>
-                    {product.quantity}
+                    {product.quantity} <span style={{ fontSize: '10px', opacity: 0.7 }}>{product.unit || "pcs"}</span>
                   </span>
+
                   <button
                     className="qty-btn qty-plus"
                     onClick={() => onQuantityChange(product, 1)}

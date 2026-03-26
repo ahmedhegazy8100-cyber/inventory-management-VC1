@@ -19,7 +19,8 @@ export async function PUT(
     return NextResponse.json({ errors }, { status: 400 });
   }
 
-  const { name, sku, quantity, barcode, price, purchasePrice, expiryDate, batchNumber, targetQuantity } = validation.data;
+  const { name, sku, quantity, barcode, price, purchasePrice, expiryDate, batchNumber, targetQuantity, unit, providerId } = validation.data;
+
 
 
   try {
@@ -42,6 +43,9 @@ export async function PUT(
     if (expiryDate !== undefined) data.expiryDate = expiryDate || null;
     if (batchNumber !== undefined) data.batchNumber = batchNumber?.trim() || null;
     if (targetQuantity !== undefined) data.targetQuantity = Number(targetQuantity);
+    if (unit !== undefined) data.unit = unit.trim();
+    if (providerId !== undefined) data.providerId = providerId || null;
+
 
 
     const product = await prisma.product.update({
@@ -69,6 +73,13 @@ export async function PUT(
     if (expiryDate !== undefined && existing.expiryDate?.toString() !== product.expiryDate?.toString()) {
       changes.push(`expiryDate "${existing.expiryDate || "—"}" → "${product.expiryDate || "—"}"`);
     }
+    if (unit !== undefined && existing.unit !== product.unit) {
+      changes.push(`unit "${existing.unit}" → "${product.unit}"`);
+    }
+    if (providerId !== undefined && existing.providerId !== product.providerId) {
+      changes.push(`providerId "${existing.providerId || "—"}" → "${product.providerId || "—"}"`);
+    }
+
 
 
     await prisma.auditLog.create({

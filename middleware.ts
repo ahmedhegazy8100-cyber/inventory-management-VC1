@@ -15,7 +15,7 @@ const getSecretKey = () => {
   return new TextEncoder().encode(secret);
 };
 
-const publicPaths = ["/login", "/api/auth/login", "/api/auth/signup", "/api/auth/logout", "/api/auth/me"];
+const publicPaths = ["/login", "/mobile/login", "/api/auth/login", "/api/auth/signup", "/api/auth/logout", "/api/auth/me"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -43,6 +43,7 @@ export async function middleware(request: NextRequest) {
 
   const isPublicPath = publicPaths.includes(pathname);
   const isApiRoute = pathname.startsWith("/api/");
+  const isMobileRoute = pathname.startsWith("/mobile");
 
   // Protect internal API routes
   if (isApiRoute && !isPublicPath) {
@@ -55,11 +56,17 @@ export async function middleware(request: NextRequest) {
   // Protect frontend routes
   if (!isApiRoute) {
     if (!isValidToken && !isPublicPath) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      // Mobile routes → mobile login; desktop routes → desktop login
+      const loginPath = isMobileRoute ? "/mobile/login" : "/login";
+      return NextResponse.redirect(new URL(loginPath, request.url));
     }
-    
+
+    // Redirect away from login pages if already authenticated
     if (isValidToken && pathname === "/login") {
       return NextResponse.redirect(new URL("/", request.url));
+    }
+    if (isValidToken && pathname === "/mobile/login") {
+      return NextResponse.redirect(new URL("/mobile/scan", request.url));
     }
   }
 

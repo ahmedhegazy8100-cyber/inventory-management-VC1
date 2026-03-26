@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "./components/I18nProvider";
 import { ProductTable } from "./components/ProductTable";
+import Link from "next/link";
 import { 
   BarChart3, 
   AlertTriangle, 
@@ -13,7 +14,8 @@ import {
   Archive, 
   Folder,
   LayoutDashboard,
-  LogOut
+  LogOut,
+  Smartphone
 } from "lucide-react";
 
 
@@ -397,13 +399,30 @@ export default function Home() {
           <p className="text-secondary">{t("welcomeBack") || "Welcome back"}, {user.name}</p>
         </div>
         <div className="header-actions">
-
-
+          <Link
+            href="/mobile/scan"
+            id="btn-direct-checkout"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              background: 'linear-gradient(135deg,#635BFF,#8B85FF)',
+              color: '#fff',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '14px',
+              textDecoration: 'none',
+              boxShadow: '0 4px 16px rgba(99,91,255,0.35)',
+              transition: 'transform 0.15s, box-shadow 0.15s',
+            }}
+          >
+            <Smartphone size={16} /> Direct Checkout
+          </Link>
           <button onClick={() => setShowProviders(!showProviders)} className="btn-icon">
             {showProviders ? "Back to Products" : "Manage Suppliers"}
           </button>
           <button onClick={() => setShowAddForm(true)} className="btn-add" style={{ marginTop: 0 }}>
-
             <Plus size={18} /> {t("addProduct")}
           </button>
           <button onClick={handleLogout} className="btn-logout">

@@ -237,47 +237,72 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
 
       <style jsx>{`
         .glass-overlay {
-          background: rgba(0, 0, 0, 0.4);
-          backdrop-filter: blur(8px);
+          background: rgba(5, 5, 20, 0.65);
+          backdrop-filter: blur(12px);
           position: fixed;
           inset: 0;
           z-index: 1000;
           display: flex;
           align-items: center;
           justify-content: center;
-          animation: fadeIn 0.3s ease-out;
+          animation: fadeIn 0.25s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
 
         .glass-modal {
-          background: var(--bg-card-glass);
-          backdrop-filter: blur(20px);
-          border: 1px solid var(--border-color);
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+          background: linear-gradient(145deg, rgba(20, 14, 50, 0.95), rgba(30, 20, 70, 0.92));
+          backdrop-filter: blur(24px);
+          border: 1px solid rgba(139, 92, 246, 0.25);
+          box-shadow:
+            0 0 0 1px rgba(139, 92, 246, 0.1),
+            0 30px 60px rgba(0, 0, 0, 0.5),
+            0 0 80px rgba(109, 40, 217, 0.08);
           border-radius: 24px;
           width: 90%;
           max-width: 600px;
           overflow: hidden;
+          position: relative;
           animation: modalAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        /* Top accent stripe */
+        .glass-modal::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, #7c3aed, #a78bfa, #7c3aed);
+          z-index: 1;
+        }
+
         @keyframes modalAppear {
-          from { opacity: 0; transform: scale(0.95) translateY(20px); }
+          from { opacity: 0; transform: scale(0.94) translateY(24px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .modal-header {
-          padding: 24px 32px;
-          border-bottom: 1px solid var(--border-color);
+          padding: 28px 32px 24px;
+          border-bottom: 1px solid rgba(139, 92, 246, 0.15);
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          background: rgba(255, 255, 255, 0.02);
+          background: rgba(109, 40, 217, 0.06);
         }
 
         .header-content h2 {
           margin: 0;
           font-size: 1.5rem;
           font-weight: 800;
+          background: linear-gradient(135deg, #a78bfa, #e879f9);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .modal-form {
@@ -299,34 +324,64 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
           gap: 8px;
           margin-bottom: 8px;
           font-weight: 600;
-          font-size: 0.9rem;
-          color: var(--text-secondary);
+          font-size: 0.85rem;
+          color: rgba(167, 139, 250, 0.8);
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
         }
 
         .select-input, input {
           width: 100%;
           padding: 12px 16px;
           border-radius: 12px;
-          background: var(--bg-input);
-          border: 1px solid var(--border-color);
-          color: var(--text-primary);
+          background: rgba(109, 40, 217, 0.08);
+          border: 1px solid rgba(139, 92, 246, 0.2);
+          color: #e2d9f3;
           font-size: 0.95rem;
-          transition: all 0.2s;
+          transition: all 0.25s;
+        }
+
+        .select-input option {
+          background: #1e1446;
+          color: #e2d9f3;
         }
 
         .select-input:focus, input:focus {
-          border-color: var(--accent);
-          box-shadow: 0 0 0 4px var(--accent-glow);
+          border-color: rgba(139, 92, 246, 0.6);
+          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), 0 0 20px rgba(139, 92, 246, 0.1);
           outline: none;
+          background: rgba(109, 40, 217, 0.14);
+        }
+
+        .select-input::placeholder, input::placeholder {
+          color: rgba(167, 139, 250, 0.35);
         }
 
         .input-error {
-          border-color: var(--error) !important;
+          border-color: rgba(248, 113, 113, 0.6) !important;
+          box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.1) !important;
         }
 
-        .toggle-group {
-          margin-top: 8px;
+        .error-text {
+          font-size: 0.8rem;
+          color: #f87171;
+          margin-top: 4px;
+          display: block;
         }
+
+        .form-error-banner {
+          background: rgba(248, 113, 113, 0.1);
+          border: 1px solid rgba(248, 113, 113, 0.3);
+          color: #fca5a5;
+          padding: 12px 16px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 0.9rem;
+        }
+
+        .toggle-group { margin-top: 4px; }
 
         .toggle-container {
           display: flex;
@@ -338,21 +393,24 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
           width: 48px;
           height: 24px;
           border-radius: 24px;
-          background: var(--border-color);
+          background: rgba(139, 92, 246, 0.15);
+          border: 1px solid rgba(139, 92, 246, 0.2);
           position: relative;
           cursor: pointer;
-          transition: background 0.3s;
+          transition: all 0.3s;
         }
 
         .toggle-switch.on {
-          background: var(--success);
+          background: rgba(109, 40, 217, 0.6);
+          border-color: rgba(139, 92, 246, 0.5);
+          box-shadow: 0 0 12px rgba(109, 40, 217, 0.4);
         }
 
         .toggle-knob {
           width: 18px;
           height: 18px;
           border-radius: 50%;
-          background: white;
+          background: rgba(167, 139, 250, 0.6);
           position: absolute;
           top: 3px;
           left: 3px;
@@ -360,17 +418,20 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
         }
 
         .on .toggle-knob {
+          background: #a78bfa;
           transform: translateX(24px);
+          box-shadow: 0 0 8px rgba(167, 139, 250, 0.6);
         }
 
         .toggle-label {
           font-size: 0.85rem;
-          color: var(--text-secondary);
+          color: rgba(167, 139, 250, 0.5);
+          font-weight: 600;
         }
 
         .toggle-label.active {
-          color: var(--text-primary);
-          font-weight: 700;
+          color: #a78bfa;
+          text-shadow: 0 0 10px rgba(167, 139, 250, 0.4);
         }
 
         .modal-actions {
@@ -378,39 +439,75 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
           justify-content: flex-end;
           gap: 16px;
           margin-top: 12px;
+          padding-top: 20px;
+          border-top: 1px solid rgba(139, 92, 246, 0.12);
         }
 
         .haptic-btn {
-          transition: transform 0.1s;
+          transition: transform 0.1s, filter 0.2s;
         }
 
-        .haptic-btn:active {
-          transform: scale(0.95);
+        .haptic-btn:active { transform: scale(0.95); }
+
+        .btn-close {
+          background: rgba(139, 92, 246, 0.1);
+          border: 1px solid rgba(139, 92, 246, 0.2);
+          color: #a78bfa;
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-close:hover {
+          background: rgba(139, 92, 246, 0.2);
+          box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
         }
 
         .btn-cancel {
-          background: transparent;
-          border: 1px solid var(--border-color);
-          color: var(--text-secondary);
+          background: rgba(139, 92, 246, 0.06);
+          border: 1px solid rgba(139, 92, 246, 0.2);
+          color: rgba(167, 139, 250, 0.8);
           padding: 12px 24px;
           border-radius: 12px;
           font-weight: 600;
           cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+          background: rgba(139, 92, 246, 0.12);
         }
 
         .btn-save {
-          background: var(--accent);
+          background: linear-gradient(135deg, #7c3aed, #a855f7);
           color: white;
           border: none;
           padding: 12px 32px;
           border-radius: 12px;
           font-weight: 700;
           cursor: pointer;
-          box-shadow: 0 10px 20px var(--accent-glow);
+          box-shadow: 0 8px 24px rgba(109, 40, 217, 0.4);
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
         .btn-save:hover {
-          filter: brightness(1.1);
+          filter: brightness(1.12);
+          box-shadow: 0 12px 32px rgba(109, 40, 217, 0.55);
+          transform: translateY(-1px);
+        }
+
+        .btn-save:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
         }
 
         .premium-toast {
@@ -418,7 +515,7 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
           bottom: 32px;
           left: 50%;
           transform: translateX(-50%);
-          background: var(--success);
+          background: linear-gradient(135deg, #059669, #10b981);
           color: white;
           padding: 12px 24px;
           border-radius: 999px;
@@ -428,6 +525,7 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
           font-weight: 700;
           box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
           animation: slideUpToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          white-space: nowrap;
         }
 
         @keyframes slideUpToast {
@@ -449,3 +547,4 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
     </div>
   );
 }
+

@@ -22,7 +22,11 @@ export const providerSchema = z.object({
   name: z.string().trim().min(1, "Provider name is required."),
   category: z.string().trim().nullable().optional(),
   contactName: z.string().trim().nullable().optional(),
-  email: z.string().trim().email("Invalid email address.").nullable().optional(),
+  email: z.string().trim()
+    .email("Invalid email address.")
+    .or(z.literal(""))
+    .transform(val => val === "" ? null : val)
+    .nullable().optional(),
   phone: z.string().trim().nullable().optional(),
   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
 });

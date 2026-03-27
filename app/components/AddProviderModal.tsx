@@ -73,7 +73,7 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.message || "Failed to save provider");
+        throw new Error(JSON.stringify(errData));
       }
 
       const saved = await res.json();
@@ -92,7 +92,21 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
         });
         setErrors(fieldErrors);
       } else {
-        setErrors({ form: err.message });
+        // Handle custom backend errors (like the 409 or detailed 400)
+        try {
+          const remoteErrors = JSON.parse(err.message);
+          if (remoteErrors.errors) {
+            const fieldErrors: Record<string, string> = {};
+            remoteErrors.errors.forEach((issue: any) => {
+              fieldErrors[issue.path[0]] = issue.message;
+            });
+            setErrors(fieldErrors);
+          } else {
+            setErrors({ form: remoteErrors.message || err.message });
+          }
+        } catch {
+          setErrors({ form: err.message });
+        }
       }
     } finally {
       setIsSubmitting(false);

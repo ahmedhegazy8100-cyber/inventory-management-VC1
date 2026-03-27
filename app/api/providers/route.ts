@@ -43,11 +43,24 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(provider, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ errors: error.issues }, { status: 400 });
     }
+
+    // Handle Prisma Unique Constraint Violation
+    if (error.code === "P2002") {
+      const field = error.meta?.target?.[0] || "field";
+      return NextResponse.json(
+        { message: `A provider with this ${field} already exists.` },
+        { status: 409 }
+      );
+    }
+
     console.error("Error creating provider:", error);
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { message: error.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

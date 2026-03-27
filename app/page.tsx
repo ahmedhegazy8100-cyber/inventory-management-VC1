@@ -167,15 +167,17 @@ export default function Home() {
   const totalProducts = result?.meta?.total || 0;
 
   // React Query: Fetch Providers
-  const { data: providers = [] } = useQuery<Provider[]>({
+  const { data: providerResponse } = useQuery({
     queryKey: ["providers"],
     queryFn: async () => {
-      const res = await fetch("/api/providers");
+      const res = await fetch("/api/providers?limit=100"); // Get more for the dropdown
       if (!res.ok) throw new Error("Failed to fetch providers");
       return res.json();
     },
     enabled: !!user,
   });
+
+  const providerList: Provider[] = providerResponse?.providers || [];
 
   const { data: stats } = useQuery({
     queryKey: ["stats"],
@@ -624,7 +626,7 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody>
-                  {providers.map(p => (
+                  {providerList.map(p => (
                     <tr key={p.id}>
                       <td>{p.name}</td>
                       <td>{p.category || "—"}</td>
@@ -635,7 +637,7 @@ export default function Home() {
                       </td>
                     </tr>
                   ))}
-                  {providers.length === 0 && (
+                  {providerList.length === 0 && (
                     <tr><td colSpan={3} style={{ textAlign: 'center', padding: '32px' }}>No suppliers found.</td></tr>
                   )}
                 </tbody>
@@ -731,7 +733,7 @@ export default function Home() {
                     style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '11px', color: 'var(--text-primary)' }}
                   >
                     <option value="">Select Provider</option>
-                    {providers.map(p => (
+                    {providerList.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
@@ -835,7 +837,7 @@ export default function Home() {
                   style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '11px', color: 'var(--text-primary)' }}
                 >
                   <option value="">Select Provider</option>
-                  {providers.map(p => (
+                  {providerList.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>

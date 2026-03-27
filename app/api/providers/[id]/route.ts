@@ -3,6 +3,40 @@ import { prisma } from "@/lib/prisma";
 import { providerSchema } from "@/lib/schemas";
 import { z } from "zod";
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const provider = await (prisma as any).provider.findUnique({
+      where: { id },
+      include: {
+        products: {
+          where: { deletedAt: null },
+          select: {
+            id: true,
+            name: true,
+            sku: true,
+            quantity: true,
+            price: true,
+            unit: true,
+          }
+        }
+      }
+    });
+
+    if (!provider || provider.deletedAt) {
+      return NextResponse.json({ error: "Provider not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(provider);
+  } catch (error) {
+    console.error("GET Provider Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

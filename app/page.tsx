@@ -14,8 +14,7 @@ import {
   Archive, 
   Folder,
   LayoutDashboard,
-  LogOut,
-  Smartphone
+  LogOut
 } from "lucide-react";
 
 
@@ -107,10 +106,6 @@ export default function Home() {
   const [showProviders, setShowProviders] = useState(false);
   const [newProvName, setNewProvName] = useState("");
   const [newProvCat, setNewProvCat] = useState("");
-
-  // PWA Install Guide modal
-  const [showInstallModal, setShowInstallModal] = useState(false);
-
 
   // Toast
   const [toast, setToast] = useState<{
@@ -402,26 +397,6 @@ export default function Home() {
           <p className="text-secondary">{t("welcomeBack") || "Welcome back"}, {user.name}</p>
         </div>
         <div className="header-actions">
-          <Link
-            href="/mobile/scan"
-            id="btn-direct-checkout"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 18px',
-              background: 'linear-gradient(135deg,#635BFF,#8B85FF)',
-              color: '#fff',
-              borderRadius: '10px',
-              fontWeight: 700,
-              fontSize: '14px',
-              textDecoration: 'none',
-              boxShadow: '0 4px 16px rgba(99,91,255,0.35)',
-              transition: 'transform 0.15s, box-shadow 0.15s',
-            }}
-          >
-            <Smartphone size={16} /> Direct Checkout
-          </Link>
           <Link
             href="/mobile/scan"
             target="_blank"
@@ -907,158 +882,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Download Cashier View Modal ── */}
-      {showInstallModal && (
-        <div className="modal-overlay" onClick={() => setShowInstallModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
 
-            {/* Header */}
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <div style={{
-                fontSize: 40, marginBottom: 10,
-                filter: 'drop-shadow(0 0 12px rgba(0,255,194,0.5))'
-              }}>📲</div>
-              <h3 style={{ fontSize: '1.2rem', marginBottom: 4 }}>Download Cashier View</h3>
-              <p className="text-secondary" style={{ fontSize: 13 }}>
-                Install the Inventra mobile cashier app on staff devices
-              </p>
-            </div>
-
-            {/* App URL */}
-            <div style={{
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 10,
-              padding: '10px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              marginBottom: 20,
-            }}>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>URL</span>
-              <code style={{
-                flex: 1,
-                fontSize: 12,
-                color: 'var(--accent)',
-                wordBreak: 'break-all',
-              }}>
-                {typeof window !== 'undefined' ? `${window.location.origin}/mobile/scan` : '/mobile/scan'}
-              </code>
-              <button
-                onClick={() => {
-                  if (typeof window !== 'undefined') {
-                    navigator.clipboard.writeText(`${window.location.origin}/mobile/scan`);
-                    showToast('Link copied!');
-                  }
-                }}
-                style={{
-                  flexShrink: 0,
-                  padding: '4px 10px',
-                  fontSize: 11,
-                  background: 'var(--accent)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                Copy
-              </button>
-            </div>
-
-            {/* Steps */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-
-              {/* Android */}
-              <div style={{
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 12,
-                padding: 16,
-              }}>
-                <div style={{ fontSize: 22, marginBottom: 8 }}>🤖</div>
-                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Android (Chrome)</div>
-                {[
-                  'Open the link above in Chrome',
-                  'Tap the banner: "Install Inventra"',
-                  'Tap Install ✓',
-                ].map((step, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'flex-start' }}>
-                    <span style={{
-                      width: 18, height: 18, borderRadius: '50%',
-                      background: 'rgba(99,91,255,0.2)',
-                      color: 'var(--accent)',
-                      fontSize: 10, fontWeight: 700,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0, marginTop: 1,
-                    }}>{i + 1}</span>
-                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{step}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* iOS */}
-              <div style={{
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 12,
-                padding: 16,
-              }}>
-                <div style={{ fontSize: 22, marginBottom: 8 }}>🍎</div>
-                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>iPhone (Safari)</div>
-                {[
-                  'Open the link in Safari',
-                  'Tap Share ↑ → "Add to Home Screen"',
-                  'Tap Add ✓',
-                ].map((step, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'flex-start' }}>
-                    <span style={{
-                      width: 18, height: 18, borderRadius: '50%',
-                      background: 'rgba(0,255,194,0.1)',
-                      color: '#00C49A',
-                      fontSize: 10, fontWeight: 700,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0, marginTop: 1,
-                    }}>{i + 1}</span>
-                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{step}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Note */}
-            <p style={{
-              fontSize: 11, color: 'var(--text-muted)',
-              background: 'rgba(99,91,255,0.06)',
-              border: '1px solid rgba(99,91,255,0.15)',
-              borderRadius: 8, padding: '8px 12px',
-              marginBottom: 20, lineHeight: 1.5,
-            }}>
-              ⚡ Once installed, the app opens fullscreen with no browser bar and works offline. Stock updates sync in real time after every purchase.
-            </p>
-
-            <div className="modal-actions">
-              <button className="btn-cancel" onClick={() => setShowInstallModal(false)}>Close</button>
-              <a
-                href="/mobile/scan"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '10px 20px',
-                  background: 'linear-gradient(135deg,#635BFF,#8B85FF)',
-                  color: '#fff', borderRadius: 10,
-                  fontWeight: 700, fontSize: 14,
-                  textDecoration: 'none',
-                }}
-              >
-                Open Now →
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
 
       {toast && (
         <div className={`toast toast-${toast.type}`}>{toast.message}</div>

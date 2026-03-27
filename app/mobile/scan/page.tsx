@@ -81,6 +81,7 @@ export default function MobileScanPage() {
   const [lookingUp, setLookingUp] = useState(false);
   const [successGlow, setSuccessGlow] = useState(false);
   const [scannerKey, setScannerKey] = useState(0); // re-mount scanner
+  const [manualCode, setManualCode] = useState("");
 
   // ─── Alert helper ────────────────────────────────────────────────────────
   const showAlert = useCallback((message: string, kind: AlertKind, ms = 3500) => {
@@ -117,7 +118,6 @@ export default function MobileScanPage() {
           config,
           async (decoded: string) => {
             if (lookingUp) return;
-            // Provide a small pause feel
             vibrate(50);
             await handleBarcodeScan(decoded);
           },
@@ -144,41 +144,25 @@ export default function MobileScanPage() {
     try {
       const product = await lookupBarcode(barcode);
 
-      // Out-of-stock guard — Wasabi alert
+      // Out-of-stock guard
       if (product.quantity <= 0) {
         vibrate([80, 40, 80, 40, 80]);
         showAlert(`⚠ Out of stock: ${product.name}`, "wasabi");
-        setLookingUp(false);
         return;
       }
 
-      // Check how much we already have in cart vs stock
-      const inCart = cart.find((i) => i.productId === product.id);
-      const cartQty = inCart ? inCart.quantity : 0;
-      if (cartQty >= product.quantity) {
+      // Check stock limit in cart
+      const existing = cart.find((i) => i.productId === product.id);
+      if (existing && existing.quantity >= product.quantity) {
         vibrate([80, 40, 80]);
         showAlert(`⚠ Maximum stock reached for ${product.name}`, "wasabi");
-        setLookingUp(false);
         return;
       }
 
-      // Validate with Zod
-      const parsed = cartItemSchema.safeParse({
-        productId: product.id,
-        quantity: 1,
-        price: product.price,
-        unit: product.unit,
-      });
-      if (!parsed.success) {
-        showAlert("Invalid product data", "error");
-        setLookingUp(false);
-        return;
-      }
-
-      // Add to cart
+      // Add/Update cart
       setCart((prev) => {
-        const existing = prev.find((i) => i.productId === product.id);
-        if (existing) {
+        const item = prev.find((i) => i.productId === product.id);
+        if (item) {
           return prev.map((i) =>
             i.productId === product.id ? { ...i, quantity: i.quantity + 1 } : i
           );
@@ -196,18 +180,27 @@ export default function MobileScanPage() {
           },
         ];
       });
+
       vibrate([30, 20, 60]);
-      showAlert(`✓ Added: ${product.name}`, "success", 1800);
+      showAlert(`✓ Added: ${product.name}`, "success", 2000);
     } catch (err: any) {
+      vibrate([40, 40]);
       if (err.message === "NOT_FOUND") {
-        vibrate([80, 40, 80]);
-        showAlert("Product not found for this barcode", "error");
+        showAlert("❌ Product not found", "error");
       } else {
-        showAlert("Lookup error. Retry.", "error");
+        showAlert("🔌 Lookup failed. Retry.", "error");
       }
     } finally {
       setLookingUp(false);
     }
+  };
+
+  const handleManualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualCode.trim() || lookingUp) return;
+    const code = manualCode.trim();
+    setManualCode(""); 
+    await handleBarcodeScan(code);
   };
 
   // ─── Cart controls ────────────────────────────────────────────────────────
@@ -224,6 +217,7 @@ export default function MobileScanPage() {
     );
     vibrate(20);
   };
+
   const decrementQty = (productId: string) => {
     setCart((prev) =>
       prev
@@ -232,6 +226,7 @@ export default function MobileScanPage() {
     );
     vibrate(20);
   };
+
   const removeItem = (productId: string) => {
     setCart((prev) => prev.filter((i) => i.productId !== productId));
     vibrate([30, 30]);
@@ -266,6 +261,7 @@ export default function MobileScanPage() {
       showAlert(err.message, "wasabi");
     },
   });
+
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
@@ -693,17 +689,67 @@ export default function MobileScanPage() {
             </button>
           </div>
 
-          {/* ─── SCAN VIEW ─── */}
+           {/* ─── SCAN VIEW ─── */}
           {view === "scan" && (
-            <div className="pos-scanner-card" style={{ position: "relative" }}>
-              <div className="pos-scanner-label">Live Scanner</div>
-              <div ref={readerDivRef} id="qr-reader" style={{ borderRadius: 16 }} />
-              {lookingUp && (
-                <div className="pos-lookup-overlay">
-                  <div className="pos-spinner" />
-                </div>
-              )}
-            </div>
+            <>
+              <div className="pos-scanner-card" style={{ position: "relative", marginBottom: "16px" }}>
+                <div className="pos-scanner-label">Live Scanner</div>
+                <div ref={readerDivRef} id="qr-reader" style={{ borderRadius: 16 }} />
+                {lookingUp && (
+                  <div className="pos-lookup-overlay">
+                    <div className="pos-spinner" />
+                  </div>
+                )}
+              </div>
+
+              {/* Manual Entry Fallback */}
+              <form 
+                onSubmit={handleManualSubmit}
+                style={{
+                  display: 'flex',
+                  gap: '10px',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  padding: '12px',
+                  borderRadius: '16px',
+                  backdropFilter: 'blur(10px)'
+                }}
+              >
+                <input 
+                  type="text" 
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value)}
+                  placeholder="Enter barcode or code manually..."
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#fff',
+                    outline: 'none',
+                    fontSize: '14px',
+                    fontFamily: 'inherit'
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={!manualCode.trim() || lookingUp}
+                  style={{
+                    padding: '8px 16px',
+                    background: 'linear-gradient(135deg,#635BFF,#8B85FF)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    opacity: (!manualCode.trim() || lookingUp) ? 0.5 : 1,
+                    transition: 'opacity 0.2s'
+                  }}
+                >
+                  {lookingUp ? '...' : 'Add'}
+                </button>
+              </form>
+            </>
           )}
 
           {/* ─── CART VIEW ─── */}

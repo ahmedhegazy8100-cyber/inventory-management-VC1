@@ -18,8 +18,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { productId, providerName, expectedDate, quantity, notes } = body;
-
+    const { productId, providerId, providerName, expectedDate, quantity, notes } = body;
+    
     const errors: Record<string, string> = {};
 
     if (!productId) errors.productId = "Product ID is required.";
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
     const order = await prisma.order.create({
       data: {
         productId,
+        providerId: providerId || null,
         providerName: providerName.trim(),
         expectedDate: new Date(expectedDate),
         quantity: qty,
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
         action: "CREATE",
         entity: "Order",
         entityId: order.id,
-        details: `Placed order for ${qty} of "${order.product.name}" from ${order.providerName}`,
+        details: `Placed order for ${qty} of "${(order as any).product.name}" from ${order.providerName}`,
       },
     });
 

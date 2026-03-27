@@ -1,7 +1,7 @@
 "use client";
 
 import { useI18n } from "./I18nProvider";
-import { Edit2, Trash2, Mail, Tag, User as UserIcon } from "lucide-react";
+import { Edit2, Trash2, Mail, Tag, User as UserIcon, Eye } from "lucide-react";
 
 interface Provider {
   id: string;
@@ -17,9 +17,10 @@ interface ProviderTableProps {
   loading: boolean;
   onEdit: (provider: Provider) => void;
   onDelete: (provider: Provider) => void;
+  onView: (provider: Provider) => void;
 }
 
-export function ProviderTable({ providers, loading, onEdit, onDelete }: ProviderTableProps) {
+export function ProviderTable({ providers, loading, onEdit, onDelete, onView }: ProviderTableProps) {
   const { t, isRTL } = useI18n();
 
   if (loading) {
@@ -81,6 +82,9 @@ export function ProviderTable({ providers, loading, onEdit, onDelete }: Provider
                 </span>
               </td>
               <td className="actions">
+                <button className="btn-icon" onClick={() => onView(p)} title={t("view") || "View"}>
+                  <Eye size={16} />
+                </button>
                 <button className="btn-icon" onClick={() => onEdit(p)} title={t("edit")}>
                   <Edit2 size={16} />
                 </button>

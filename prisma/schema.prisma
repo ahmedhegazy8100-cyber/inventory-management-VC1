@@ -68,6 +68,8 @@ model Order {
   id           String   @id @default(uuid())
   productId    String
   product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  providerId   String?
+  provider     Provider? @relation(fields: [providerId], references: [id])
   providerName String
   expectedDate DateTime
   quantity     Int
@@ -98,6 +100,7 @@ model Provider {
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
   products     Product[]
+  orders       Order[]
 
   @@index([name])
 }

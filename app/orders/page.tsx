@@ -38,10 +38,22 @@ export default function OrdersPage() {
   // Order modal state
   const [activeSuggestion, setActiveSuggestion] = useState<Product | null>(null);
   const [formProviderName, setFormProviderName] = useState("");
+  const [formProviderId, setFormProviderId] = useState("");
   const [formExpectedDate, setFormExpectedDate] = useState("");
   const [formQuantity, setFormQuantity] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+
+  // Fetch providers for the dropdown
+  const { data: providerData } = useQuery({
+    queryKey: ["providers-list"],
+    queryFn: async () => {
+      const res = await fetch("/api/providers?limit=100");
+      if (!res.ok) throw new Error("Failed to fetch providers");
+      return res.json();
+    },
+  });
+  const providerList = providerData?.providers || [];
 
   // Toast
   const [toast, setToast] = useState<{
@@ -148,6 +160,7 @@ export default function OrdersPage() {
 
     placeOrderMutation.mutate({
       productId: activeSuggestion.id,
+      providerId: formProviderId,
       providerName: formProviderName.trim(),
       expectedDate: formExpectedDate,
       quantity: qty,
@@ -298,15 +311,23 @@ export default function OrdersPage() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 16 }}>
-                <label htmlFor="provider-name">{t("provider")} *</label>
-                <input
-                  id="provider-name"
-                  type="text"
-                  value={formProviderName}
-                  onChange={(e) => setFormProviderName(e.target.value)}
-                  className={formErrors.providerName ? "input-error" : ""}
-                  placeholder="e.g. Acme Logistics"
-                />
+                <label htmlFor="provider-select">{t("provider")} *</label>
+                <select
+                  id="provider-select"
+                  value={formProviderId}
+                  onChange={(e) => {
+                    const p = providerList.find((prov: any) => prov.id === e.target.value);
+                    setFormProviderId(e.target.value);
+                    setFormProviderName(p ? p.name : "");
+                  }}
+                  className={formErrors.providerName ? "select-error" : ""}
+                  style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '12px', color: 'var(--text-primary)', width: '100%' }}
+                >
+                  <option value="">-- Select Provider --</option>
+                  {providerList.map((p: any) => (
+                    <option key={p.id} value={p.id}>{p.name} ({t(p.category || "other")})</option>
+                  ))}
+                </select>
                 {formErrors.providerName && <span className="error-text">{formErrors.providerName}</span>}
               </div>
 

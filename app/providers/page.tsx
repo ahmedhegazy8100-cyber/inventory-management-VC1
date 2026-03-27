@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   AlertCircle
 } from "lucide-react";
+import { ProviderDetailModal } from "../components/ProviderDetailModal";
 
 export default function ProvidersPage() {
   const { t, isRTL } = useI18n();
@@ -23,7 +24,9 @@ export default function ProvidersPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
+  const [viewProvider, setViewProvider] = useState<any>(null);
   const [deleteProvider, setDeleteProvider] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
@@ -132,6 +135,7 @@ export default function ProvidersPage() {
             loading={false}
             onEdit={openEditModal}
             onDelete={setDeleteProvider}
+            onView={(p) => { setViewProvider(p); setIsDetailOpen(true); }}
           />
         )}
 
@@ -151,12 +155,13 @@ export default function ProvidersPage() {
         initialData={selectedProvider}
       />
 
-      <AddProviderModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={handleModalSuccess}
-        initialData={selectedProvider}
-      />
+      {viewProvider && (
+        <ProviderDetailModal
+          provider={viewProvider}
+          isOpen={isDetailOpen}
+          onClose={() => { setIsDetailOpen(false); setViewProvider(null); }}
+        />
+      )}
 
       {/* Delete Modal */}
       {deleteProvider && (

@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "../../components/I18nProvider";
+import { AddProviderModal } from "../../components/AddProviderModal";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -15,7 +16,11 @@ import {
   Phone, 
   User as UserIcon,
   Tag,
-  Clock
+  Clock,
+  Edit,
+  Power,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 
 interface Product {
@@ -55,8 +60,10 @@ interface Provider {
 export default function ProviderDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { t, isRTL } = useI18n();
   const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const { data: provider, isLoading: loadingProvider } = useQuery<Provider>({
     queryKey: ["provider", id],
@@ -64,6 +71,22 @@ export default function ProviderDetailPage() {
       const res = await fetch(`/api/providers/${id}`);
       if (!res.ok) throw new Error("Provider not found");
       return res.json();
+    },
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const res = await fetch(`/api/providers/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["provider", id] });
+      queryClient.invalidateQueries({ queryKey: ["providers"] });
     },
   });
 
@@ -101,12 +124,37 @@ export default function ProviderDetailPage() {
     );
   }
 
+  const toggleStatus = () => {
+    const nextStatus = provider.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    statusMutation.mutate(nextStatus);
+  };
+
   return (
     <div className="provider-detail-page">
       <header className="detail-header">
-        <button className="btn-back haptic-btn" onClick={() => router.push("/providers")}>
-          <ArrowLeft size={18} /> {isRTL ? "العودة" : "Back"}
-        </button>
+        <div className="header-top">
+          <button className="btn-back haptic-btn" onClick={() => router.push("/providers")}>
+            <ArrowLeft size={18} /> {isRTL ? "العودة" : "Back"}
+          </button>
+          
+          <div className="header-actions">
+            <button 
+              className={`btn-status haptic-btn ${provider.status === "ACTIVE" ? 'active' : 'inactive'}`}
+              onClick={toggleStatus}
+              disabled={statusMutation.isPending}
+            >
+              {statusMutation.isPending ? "..." : (
+                <>
+                  {provider.status === "ACTIVE" ? <XCircle size={16} /> : <CheckCircle size={16} />}
+                  {provider.status === "ACTIVE" ? (isRTL ? "تعطيل" : "Deactivate") : (isRTL ? "تفعيل" : "Activate")}
+                </>
+              )}
+            </button>
+            <button className="btn-edit haptic-btn" onClick={() => setIsEditModalOpen(true)}>
+              <Edit size={16} /> {t("edit")}
+            </button>
+          </div>
+        </div>
         <div className="header-main">
           <div className="provider-avatar-large">
             {provider.name.charAt(0).toUpperCase()}
@@ -288,6 +336,15 @@ export default function ProviderDetailPage() {
         </main>
       </div>
 
+      <AddProviderModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["provider", id] });
+        }}
+        initialData={provider}
+      />
+
       <style jsx>{`
         .provider-detail-page {
           animation: fadeIn 0.4s ease-out;
@@ -297,11 +354,51 @@ export default function ProviderDetailPage() {
           max-width: 1200px;
           margin: 0 auto;
           width: 100%;
+          padding-bottom: 60px;
         }
         .detail-header {
           display: flex;
           flex-direction: column;
           gap: 20px;
+        }
+        .header-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .header-actions {
+          display: flex;
+          gap: 12px;
+        }
+        .btn-status, .btn-edit {
+          padding: 8px 16px;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-status.active {
+          background: rgba(239, 68, 68, 0.1);
+          color: #ef4444;
+          border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .btn-status.inactive {
+          background: rgba(16, 185, 129, 0.1);
+          color: #10b981;
+          border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .btn-edit {
+          background: rgba(var(--accent-rgb), 0.1);
+          color: var(--accent);
+          border: 1px solid rgba(var(--accent-rgb), 0.2);
+        }
+        .btn-status:hover, .btn-edit:hover {
+          filter: brightness(1.1);
+          transform: translateY(-2px);
         }
         .btn-back {
           background: rgba(255, 255, 255, 0.05);

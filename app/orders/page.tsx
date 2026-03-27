@@ -53,7 +53,7 @@ export default function OrdersPage() {
       return res.json();
     },
   });
-  const providerList = providerData?.providers || [];
+  const providerList = (providerData?.providers || []).filter((p: any) => p.status === "ACTIVE");
 
   // Toast
   const [toast, setToast] = useState<{

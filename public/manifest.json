@@ -1,0 +1,38 @@
+{
+  "name": "Inventra — Warehouse Mobile",
+  "short_name": "Inventra",
+  "description": "High-speed warehouse cashier flow and inventory management for Inventra operators.",
+  "start_url": "/mobile/scan",
+  "scope": "/mobile/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080810",
+  "theme_color": "#635BFF",
+  "lang": "en",
+  "dir": "auto",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Direct Checkout",
+      "short_name": "Checkout",
+      "description": "Start a new cashier session",
+      "url": "/mobile/scan",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

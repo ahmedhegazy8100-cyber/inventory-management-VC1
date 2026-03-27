@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function MobileLayout({
   children,
@@ -13,13 +13,27 @@ export default function MobileLayout({
       new QueryClient({
         defaultOptions: {
           queries: { staleTime: 1000 * 30 },
-          mutations: {},
         },
       })
   );
 
+  // Register service worker
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .then((reg) => {
+          console.log("[Inventra PWA] Service worker registered:", reg.scope);
+        })
+        .catch((err) => {
+          console.warn("[Inventra PWA] SW registration failed:", err);
+        });
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
+      {/* PWA meta tags injected via dangerouslySetInnerHTML in head — handled by root layout */}
       <div
         dir="auto"
         style={{

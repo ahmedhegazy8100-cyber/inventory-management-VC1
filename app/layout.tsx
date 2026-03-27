@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import Providers from "./Providers";
 import { I18nProvider } from "./components/I18nProvider";
@@ -7,7 +7,28 @@ import { Sidebar } from "./components/Sidebar";
 import { LayoutWrapper } from "./components/LayoutWrapper";
 import "./globals.css";
 
-// ... (skipping metadata)
+export const metadata: Metadata = {
+  title: "Inventra — Warehouse Management",
+  description: "High-speed inventory and cashier management for warehouse operators.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Inventra",
+  },
+  icons: {
+    apple: "/icon-192.png",
+    icon: "/icon-192.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#635BFF",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export default async function RootLayout({
   children,

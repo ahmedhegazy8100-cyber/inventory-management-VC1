@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+import { InstallBanner } from "../components/InstallBanner";
 
 // ─── Zod schemas ──────────────────────────────────────────────────────────────
 const cartItemSchema = z.object({
@@ -590,6 +591,9 @@ export default function MobileScanPage() {
       <div className="pos-root">
         <div className="pos-orb pos-orb-1" />
         <div className="pos-orb pos-orb-2" />
+
+        {/* ── PWA Install Banner ── */}
+        <InstallBanner />
 
         {/* ── Success Glow Overlay ── */}
         {successGlow && (

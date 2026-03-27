@@ -83,8 +83,7 @@ export async function POST(request: NextRequest) {
       action: "CREATE",
       entity: "Product",
       entityId: product.id,
-      details: `Added "${product.name}"${product.barcode ? ` (Barcode: ${product.barcode})` : ""} with quantity ${product.quantity} ${product.unit}(s) and price ${product.price}`,
-
+      details: `Added "${name}"${barcode ? ` (Barcode: ${barcode})` : ""} with quantity ${quantity} ${unit || "Piece"}(s) and price ${price || 0}`,
     },
   });
 

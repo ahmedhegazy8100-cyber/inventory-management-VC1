@@ -4,8 +4,12 @@ import { providerSchema } from "@/lib/schemas";
 import { z } from "zod"; // Import z from zod for ZodError
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const search = searchParams.get("search") || "";
+  try {
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
 
     const where: any = {
       OR: [
@@ -16,12 +20,26 @@ export async function GET(request: NextRequest) {
       deletedAt: null,
     };
 
-    const providers = await (prisma as any).provider.findMany({
-      where,
-      orderBy: { name: "asc" },
-    });
+    const [providers, total] = await Promise.all([
+      (prisma as any).provider.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: "asc" },
+      }),
+      (prisma as any).provider.count({ where }),
+    ]);
 
-    return NextResponse.json(providers);
+    return NextResponse.json({
+      providers,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("Error fetching providers:", error);
+    return NextResponse.json({ message: "Failed to fetch" }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {

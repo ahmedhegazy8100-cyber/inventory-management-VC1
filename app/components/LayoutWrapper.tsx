@@ -1,10 +1,11 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import { Sidebar } from "./Sidebar";
+import { usePathname } from "next/navigation";
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const isMobileRoute = pathname?.startsWith("/mobile");
 
   // Persistence
   useEffect(() => {
@@ -17,6 +18,11 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
     setIsCollapsed(newState);
     localStorage.setItem("sidebar-collapsed", String(newState));
   };
+
+  // Skip sidebar for mobile routes to provide a clean app-like experience
+  if (isMobileRoute) {
+    return <>{children}</>;
+  }
 
   return (
     <div className={`app-wrapper ${isCollapsed ? "sidebar-collapsed" : ""}`}>

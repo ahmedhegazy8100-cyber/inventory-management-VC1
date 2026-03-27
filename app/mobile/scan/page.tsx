@@ -1,10 +1,9 @@
-"use client";
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { InstallBanner } from "../components/InstallBanner";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 // ─── Zod schemas ──────────────────────────────────────────────────────────────
 const cartItemSchema = z.object({
@@ -87,43 +86,52 @@ export default function MobileScanPage() {
     setTimeout(() => setAlert(null), ms);
   }, []);
 
+  // ─── PWA Hook ─────────────────────────────────────────────────────────────
+  const { isInstallable, isInstalled, install } = usePWAInstall();
+
   // ─── Scanner init ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (view !== "scan") return;
 
-    let scanner: any;
+    let html5QrCode: any;
     let active = true;
 
     const initScanner = async () => {
-      const { Html5QrcodeScanner } = await import("html5-qrcode");
+      const { Html5Qrcode } = await import("html5-qrcode");
       if (!active) return;
-      scanner = new Html5QrcodeScanner(
-        "qr-reader",
-        {
-          fps: 15,
-          qrbox: { width: 260, height: 180 },
-          aspectRatio: 1.0,
-          showTorchButtonIfSupported: true,
-        },
-        false
-      );
-      scannerRef.current = scanner;
+      
+      try {
+        html5QrCode = new Html5Qrcode("qr-reader");
+        scannerRef.current = html5QrCode;
 
-      scanner.render(
-        async (decoded: string) => {
-          if (lookingUp) return;
-          scanner.pause(true);
-          await handleBarcodeScan(decoded);
-          if (active) scanner.resume();
-        },
-        () => {}
-      );
+        const config = { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0 
+        };
+
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          async (decoded: string) => {
+            if (lookingUp) return;
+            // Provide a small pause feel
+            vibrate(50);
+            await handleBarcodeScan(decoded);
+          },
+          () => {} // error callback
+        );
+      } catch (err) {
+        console.error("Scanner error:", err);
+      }
     };
 
     initScanner();
     return () => {
       active = false;
-      if (scanner) scanner.clear().catch(() => {});
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(() => {});
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, scannerKey]);
@@ -386,11 +394,21 @@ export default function MobileScanPage() {
         .pos-scanner-label::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #635BFF; animation: pulse-dot 2s ease-in-out infinite; }
 
         /* html5-qrcode overrides */
-        #qr-reader { border: none !important; border-radius: 16px; overflow: hidden; }
-        #qr-reader video { border-radius: 14px; }
-        #qr-reader__scan_region { border-radius: 16px !important; }
-        #qr-reader__dashboard { display: none !important; }
-        #qr-reader__scan_region img { display: none; }
+        #qr-reader {
+          width: 100% !important;
+          border: none !important;
+          border-radius: 16px;
+          overflow: hidden;
+          background: #000;
+          box-shadow: 0 0 40px rgba(99,91,255,0.15);
+        }
+        #qr-reader video { 
+          width: 100% !important; 
+          height: auto !important; 
+          border-radius: 16px;
+          object-fit: cover;
+        }
+
 
         .pos-lookup-overlay {
           position: absolute; inset: 0;
@@ -610,10 +628,32 @@ export default function MobileScanPage() {
             className="pos-back-btn"
             onClick={() => router.push("/")}
             aria-label="Back to dashboard"
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
           >
-            ←
+            ← <span style={{ fontWeight: 600 }}>Back to Dashboard</span>
           </button>
-          <span className="pos-header-title">Direct Checkout</span>
+          
+          <div style={{ flex: 1 }} />
+
+          {isInstallable && !isInstalled && (
+            <button
+              onClick={install}
+              style={{
+                marginRight: '12px',
+                padding: '6px 12px',
+                background: 'rgba(0, 255, 194, 0.1)',
+                border: '1px solid #00FFC2',
+                borderRadius: '8px',
+                color: '#00FFC2',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              📲 Add Icon
+            </button>
+          )}
+
           <button
             className="pos-header-badge"
             onClick={() => setView(view === "scan" ? "cart" : "scan")}

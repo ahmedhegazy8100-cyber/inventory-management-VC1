@@ -1,44 +1,26 @@
-"use client";
-
 import { useState, useEffect } from "react";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 export function InstallBanner() {
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
+  const { isInstallable, isInstalled, install } = usePWAInstall();
   const [showBanner, setShowBanner] = useState(false);
-  const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
-    // Already running as installed PWA
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
     // Already dismissed
     if (sessionStorage.getItem("pwa-banner-dismissed")) return;
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    
+    // Only show if it's installable and not already installed
+    if (isInstallable && !isInstalled) {
       setShowBanner(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+    }
+  }, [isInstallable, isInstalled]);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      setInstalled(true);
+    const success = await install();
+    if (success) {
       if (navigator.vibrate) navigator.vibrate([50, 30, 100]);
     }
     setShowBanner(false);
-    setDeferredPrompt(null);
   };
 
   const handleDismiss = () => {
@@ -102,7 +84,7 @@ export function InstallBanner() {
           <div className="pwa-banner-sub">Add to home screen for instant access</div>
         </div>
         <div className="pwa-banner-actions">
-          {installed ? (
+          {isInstalled ? (
             <div style={{ fontSize: 12, color: "#00FFC2", fontWeight: 700 }}>✓ Installed!</div>
           ) : (
             <button className="pwa-install-btn" onClick={handleInstall} id="pwa-install-btn">

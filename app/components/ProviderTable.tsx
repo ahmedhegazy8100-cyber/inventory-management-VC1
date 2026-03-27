@@ -58,7 +58,7 @@ export function ProviderTable({ providers, loading, onEdit, onDelete }: Provider
               <td>
                 <span className="flex-center-gap">
                   <Tag size={14} className="text-muted" />
-                  {p.category || "-"}
+                  {p.category ? t(p.category) : "-"}
                 </span>
               </td>
               <td>

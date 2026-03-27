@@ -61,6 +61,11 @@ const translations = {
     unit: "Unit",
     invValue: "Inv. Value",
     expProfit: "Exp. Profit",
+    freshPerishables: "Fresh & Perishables",
+    groceryDry: "Grocery & Pantry (Dry Goods)",
+    beveragesSnacks: "Beverages & Snacks",
+    frozenFoods: "Frozen Foods",
+    householdPersonal: "Household & Personal Care",
   },
 
   ar: {
@@ -112,6 +117,11 @@ const translations = {
     unit: "الوحدة",
     invValue: "قيمة المخزون",
     expProfit: "الربح المتوقع",
+    freshPerishables: "الطازجة والمواد القابلة للتلف",
+    groceryDry: "البقالة والمواد الجافة",
+    beveragesSnacks: "المشروبات والوجبات الخفيفة",
+    frozenFoods: "الأطعمة المجمدة",
+    householdPersonal: "العناية المنزلية والشخصية",
   },
 
 };

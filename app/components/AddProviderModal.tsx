@@ -18,7 +18,7 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
   
   const [formData, setFormData] = useState({
     name: "",
-    category: "LOGISTICS",
+    category: "freshPerishables",
     contactName: "",
     email: "",
     phone: "",
@@ -42,7 +42,7 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
     } else {
       setFormData({
         name: "",
-        category: "LOGISTICS",
+        category: "freshPerishables",
         contactName: "",
         email: "",
         phone: "",
@@ -100,12 +100,11 @@ export function AddProviderModal({ isOpen, onClose, onSuccess, initialData }: Ad
   };
 
   const categories = [
-    { value: "LOGISTICS", label: t("logistics") || "Logistics" },
-    { value: "RAW_MATERIALS", label: t("rawMaterials") || "Raw Materials" },
-    { value: "TECH", label: t("tech") || "Tech" },
-    { value: "FOOD_BEVERAGE", label: t("foodBeverage") || "Food & Beverage" },
-    { value: "FURNITURE", label: t("furniture") || "Furniture" },
-    { value: "OTHER", label: t("other") || "Other" },
+    { value: "freshPerishables", label: t("freshPerishables") },
+    { value: "groceryDry", label: t("groceryDry") },
+    { value: "beveragesSnacks", label: t("beveragesSnacks") },
+    { value: "frozenFoods", label: t("frozenFoods") },
+    { value: "householdPersonal", label: t("householdPersonal") },
   ];
 
   return (

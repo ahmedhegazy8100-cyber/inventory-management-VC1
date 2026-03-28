@@ -43,44 +43,40 @@ export function ProductTable({
 
   return (
     <div className="table-wrapper">
-      <table>
+      <table style={{ borderCollapse: 'separate', borderSpacing: '0 8px' }}>
         <thead>
           <tr>
-            <th>{t("name")}</th>
-            <th>{t("barcode") || "Barcode"}</th>
-            <th>{t("price") || "Price"}</th>
-            <th>Margin</th>
-            <th>{t("provider") || "Provider"}</th>
-            <th>{t("quantity")}</th>
-
-            <th>{t("actions")}</th>
-
+            <th style={{ background: 'transparent', border: 'none' }}>{t("name")}</th>
+            <th style={{ background: 'transparent', border: 'none' }}>SKU / Barcode</th>
+            <th style={{ background: 'transparent', border: 'none' }}>Last Purchasing</th>
+            <th style={{ background: 'transparent', border: 'none' }}>Last Selling</th>
+            <th style={{ background: 'transparent', border: 'none' }}>{t("quantity")}</th>
+            <th style={{ background: 'transparent', border: 'none' }}>{t("actions")}</th>
           </tr>
         </thead>
         <tbody>
           {products.map((product, i) => (
-            <tr key={product.id} style={{ animationDelay: `${i * 0.02}s` }}>
-              <td className="product-name">{product.name}</td>
-              <td className="product-sku">{product.barcode || product.sku || "—"}</td>
-              <td className="product-price font-bold">${(product.price || 0).toFixed(2)}</td>
-              <td>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <span style={{ 
-                    fontSize: '13px', 
-                    fontWeight: 600, 
-                    color: product.profitMargin >= 30 ? '#10b981' : product.profitMargin >= 10 ? '#f59e0b' : '#ef4444' 
-                  }}>
-                    {product.profitMargin?.toFixed(1)}%
-                  </span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    +${product.grossProfit?.toFixed(2)}/pc
-                  </span>
+            <tr key={product.id} className="bento-card-row" style={{ animationDelay: `${i * 0.02}s` }}>
+              <td style={{ border: 'none' }}>
+                <div style={{ fontWeight: 700, fontSize: '15px' }}>{product.name}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                   {product.provider?.name || "No Supplier Linked"}
                 </div>
               </td>
-              <td className="text-secondary" style={{ fontSize: '13px' }}>{product.provider?.name || "—"}</td>
-
-
-              <td>
+              <td style={{ border: 'none' }}>
+                <code style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                  {product.sku || product.barcode || "—"}
+                </code>
+              </td>
+              <td style={{ border: 'none' }}>
+                <div style={{ fontWeight: 600 }}>${(product.purchasePrice || 0).toFixed(2)}</div>
+                <div style={{ fontSize: '10px', opacity: 0.6 }}>Per {product.unit}</div>
+              </td>
+              <td style={{ border: 'none' }}>
+                <div style={{ fontWeight: 700, color: 'var(--accent)' }}>${(product.price || 0).toFixed(2)}</div>
+                <div style={{ fontSize: '10px', opacity: 0.6 }}>Retail Unit</div>
+              </td>
+              <td style={{ border: 'none' }}>
                 <div className="quantity-controls">
                   <button
                     className="qty-btn qty-minus"
@@ -89,10 +85,12 @@ export function ProductTable({
                   >
                     −
                   </button>
-                  <span className={`quantity-badge ${getStockClass(product.quantity)}`}>
-                    {product.quantity} <span style={{ fontSize: '10px', opacity: 0.7 }}>{product.unit || "pcs"}</span>
+                  <span className={`quantity-badge ${product.quantity > 0 ? "status-mint" : "status-wasabi"}`}>
+                    {product.quantity > 0 ? "IN STOCK" : "OUT OF STOCK"}
+                    <span style={{ marginLeft: '8px', opacity: 0.8, fontSize: '11px' }}>
+                      ({product.quantity} {product.unit})
+                    </span>
                   </span>
-
                   <button
                     className="qty-btn qty-plus"
                     onClick={() => onQuantityChange(product, 1)}
@@ -101,13 +99,13 @@ export function ProductTable({
                   </button>
                 </div>
               </td>
-              <td>
+              <td style={{ border: 'none', textAlign: 'right' }}>
                 <div className="actions">
                   <button className="btn-icon" onClick={() => onEdit(product)}>
-                    <Edit2 size={16} /> {t("edit")}
+                    <Edit2 size={14} />
                   </button>
                   <button className="btn-icon btn-danger" onClick={() => onDelete(product)}>
-                    <Trash2 size={16} /> {t("delete")}
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </td>
@@ -115,6 +113,26 @@ export function ProductTable({
           ))}
         </tbody>
       </table>
+
+      <style jsx>{`
+        .bento-card-row {
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          transition: all 0.2s ease;
+        }
+        .bento-card-row:hover {
+          background: rgba(255, 255, 255, 0.05);
+          transform: scale(1.002) translateX(4px);
+          border-color: rgba(99, 91, 255, 0.2);
+        }
+        td {
+          padding: 16px !important;
+        }
+        tr:hover td {
+           color: var(--text-primary);
+        }
+      `}</style>
     </div>
   );
 }

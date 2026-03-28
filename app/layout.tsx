@@ -1,11 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
+import { Inter, IBM_Plex_Sans_Arabic } from "next/font/google";
 import Providers from "./Providers";
 import { I18nProvider } from "./components/I18nProvider";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { Sidebar } from "./components/Sidebar";
 import { LayoutWrapper } from "./components/LayoutWrapper";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
+const ibmPlexArabic = IBM_Plex_Sans_Arabic({ 
+  subsets: ["arabic"], 
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-arabic"
+});
 
 export const metadata: Metadata = {
   title: "Inventra — Warehouse Management",
@@ -40,7 +48,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body className={`${inter.className} ${ibmPlexArabic.variable}`}>
         <I18nProvider>
           <ThemeProvider>
             <Providers>

@@ -2,7 +2,10 @@ import { z } from "zod";
 
 export const productSchema = z.object({
   name: z.string().trim().min(1, "Product name is required."),
-  sku: z.string().trim().nullable().optional(),
+  sku: z.string()
+    .trim()
+    .regex(/^[a-zA-Z0-9-]+$/, "SKU must be alphanumeric (dashes allowed)")
+    .nullable().optional(),
   barcode: z.string().trim().nullable().optional(),
   quantity: z.number().int().nonnegative("Quantity must be a non-negative whole number."),
   price: z.number().nonnegative("Price must be a non-negative number.").default(0),

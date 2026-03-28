@@ -27,6 +27,10 @@
   
   --warning: #f59e0b;
   --warning-bg: rgba(245, 158, 11, 0.1);
+
+  --mint: #00FFC2;
+  --wasabi: #DFFF00;
+  --font-arabic: 'IBM Plex Sans Arabic', sans-serif;
 }
 
 [data-theme="dark"] {
@@ -92,7 +96,7 @@ body {
 }
 
 [dir="rtl"] body {
-  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-family: var(--font-arabic), sans-serif;
 }
 
 body::before {
@@ -336,6 +340,45 @@ body::before {
 .btn-logout:hover {
   background: var(--danger-bg);
   border-color: var(--danger);
+}
+
+/* Bento & Spatial Utilities */
+.bento-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.bento-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 60%);
+  pointer-events: none;
+}
+
+.bento-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 91, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.status-mint {
+  color: var(--mint);
+  background: rgba(0, 255, 194, 0.1);
+  border: 1px solid rgba(0, 255, 194, 0.2);
+}
+
+.status-wasabi {
+  color: var(--wasabi);
+  background: rgba(223, 255, 0, 0.1);
+  border: 1px solid rgba(223, 255, 0, 0.2);
 }
 
 /* Cards */

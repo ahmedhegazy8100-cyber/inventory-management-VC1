@@ -3,14 +3,17 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "./../components/I18nProvider";
-import { AlertCircle, Truck, Package, X, CheckCircle2, Plus } from "lucide-react";
+import { AlertCircle, Truck, Package, X, CheckCircle2, Plus, Calculator, Calendar } from "lucide-react";
 import "./../globals.css";
+import { SearchableSelect } from "./../components/SearchableSelect";
 
 interface Product {
   id: string;
   name: string;
   sku: string | null;
   quantity: number;
+  unit?: string;
+  piecesPerUnit?: number;
 }
 
 interface Order {
@@ -18,7 +21,11 @@ interface Order {
   productId: string;
   providerName: string;
   expectedDate: string;
+  expiryDate?: string | null;
   quantity: number;
+  unitType?: string | null;
+  unitQuantity?: number | null;
+  piecesPerUnit?: number | null;
   notes: string | null;
   status: string;
   createdAt: string;
@@ -40,7 +47,10 @@ export default function OrdersPage() {
   const [formProviderName, setFormProviderName] = useState("");
   const [formProviderId, setFormProviderId] = useState("");
   const [formExpectedDate, setFormExpectedDate] = useState("");
-  const [formQuantity, setFormQuantity] = useState("");
+  const [formExpiryDate, setFormExpiryDate] = useState("");
+  const [formUnitQuantity, setFormUnitQuantity] = useState("1");
+  const [formUnitType, setFormUnitType] = useState("Piece");
+  const [formPiecesPerUnit, setFormPiecesPerUnit] = useState("1");
   const [selectedProductId, setSelectedProductId] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [formNotes, setFormNotes] = useState("");
@@ -150,7 +160,10 @@ export default function OrdersPage() {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     setFormExpectedDate(tomorrow.toISOString().split("T")[0]);
-    setFormQuantity("50");
+    setFormExpiryDate("");
+    setFormUnitQuantity("1");
+    setFormUnitType(product.unit || "Piece");
+    setFormPiecesPerUnit(String((product as any).piecesPerUnit || 1));
     setFormNotes("");
     setFormErrors({});
     setIsCreateModalOpen(true);
@@ -164,7 +177,10 @@ export default function OrdersPage() {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     setFormExpectedDate(tomorrow.toISOString().split("T")[0]);
-    setFormQuantity("100");
+    setFormExpiryDate("");
+    setFormUnitQuantity("1");
+    setFormUnitType("Piece");
+    setFormPiecesPerUnit("1");
     setFormNotes("");
     setFormErrors({});
     setIsCreateModalOpen(true);
@@ -182,9 +198,9 @@ export default function OrdersPage() {
     if (!formProviderId) errors.providerName = "Provider is required.";
     if (!formExpectedDate) errors.expectedDate = "Expected date is required.";
     
-    const qty = Number(formQuantity);
-    if (isNaN(qty) || !Number.isInteger(qty) || qty <= 0) {
-      errors.quantity = "Must be a positive whole number.";
+    const unitQty = Number(formUnitQuantity);
+    if (isNaN(unitQty) || unitQty <= 0) {
+      errors.quantity = "Unit quantity must be positive.";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -197,7 +213,10 @@ export default function OrdersPage() {
       providerId: formProviderId,
       providerName: formProviderName.trim(),
       expectedDate: formExpectedDate,
-      quantity: qty,
+      expiryDate: formExpiryDate || null,
+      unitQuantity: unitQty,
+      unitType: formUnitType,
+      piecesPerUnit: Number(formPiecesPerUnit),
       notes: formNotes.trim(),
     });
   };
@@ -320,7 +339,18 @@ export default function OrdersPage() {
                       </div>
                     </td>
                     <td>{order.providerName}</td>
-                    <td><span className="quantity-badge stock-ok">{order.quantity}</span></td>
+                    <td>
+                      <div className="quantity-badge stock-ok" style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-start', background: 'transparent', padding: 0 }}>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {order.unitQuantity || order.quantity} {order.unitType || 'Piece'}
+                        </span>
+                        {order.unitType && order.unitType !== 'Piece' && (
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                            ({order.quantity} total pieces)
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td dir="ltr">{new Date(order.expectedDate).toLocaleDateString()}</td>
                     <td>
                       <span className="quantity-badge" style={{ background: "var(--accent-glow)", color: "var(--accent)" }}>
@@ -345,47 +375,96 @@ export default function OrdersPage() {
               <div className="form-group" style={{ marginBottom: 16 }}>
                 <label>{t("product") || "Product"} *</label>
                 {activeSuggestion ? (
-                  <input type="text" value={activeSuggestion.name} disabled style={{ opacity: 0.6 }} />
+                  <input type="text" value={`${activeSuggestion.name} ${activeSuggestion.sku ? `(${activeSuggestion.sku})` : ""}`} disabled style={{ opacity: 0.6 }} />
                 ) : (
-                  <select
+                  <SearchableSelect
+                    options={allProducts.map((p: any) => ({
+                      id: p.id,
+                      label: p.name,
+                      sublabel: p.sku || undefined
+                    }))}
                     value={selectedProductId}
-                    onChange={(e) => setSelectedProductId(e.target.value)}
-                    style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '12px', color: 'var(--text-primary)', width: '100%' }}
-                  >
-                    <option value="">-- Select Product --</option>
-                    {allProducts.map((p: any) => (
-                      <option key={p.id} value={p.id}>{p.name} {p.sku ? `(${p.sku})` : ""}</option>
-                    ))}
-                  </select>
+                    onChange={(id) => {
+                      setSelectedProductId(id);
+                      const p = allProducts.find((prod: any) => prod.id === id);
+                      if (p) {
+                        setFormUnitType(p.unit || "Piece");
+                        setFormPiecesPerUnit(String(p.piecesPerUnit || 1));
+                      }
+                    }}
+                    placeholder="Search product by name or SKU..."
+                  />
                 )}
               </div>
 
               <div className="form-group" style={{ marginBottom: 16 }}>
-                <label htmlFor="provider-select">{t("provider")} *</label>
-                <select
-                  id="provider-select"
+                <label>{t("provider") || "Provider"} *</label>
+                <SearchableSelect
+                  options={providerList.map((p: any) => ({
+                    id: p.id,
+                    label: p.name,
+                    sublabel: t(p.category || "other")
+                  }))}
                   value={formProviderId}
-                  onChange={(e) => {
-                    const p = providerList.find((prov: any) => prov.id === e.target.value);
-                    setFormProviderId(e.target.value);
+                  onChange={(id) => {
+                    const p = providerList.find((prov: any) => prov.id === id);
+                    setFormProviderId(id);
                     setFormProviderName(p ? p.name : "");
                   }}
-                  className={formErrors.providerName ? "select-error" : ""}
-                  style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '12px', color: 'var(--text-primary)', width: '100%' }}
-                >
-                  <option value="">-- Select Provider --</option>
-                  {providerList.map((p: any) => (
-                    <option key={p.id} value={p.id}>{p.name} ({t(p.category || "other")})</option>
-                  ))}
-                </select>
-                {formErrors.providerName && <span className="error-text">{formErrors.providerName}</span>}
+                  placeholder="Search provider..."
+                  error={formErrors.providerName}
+                />
               </div>
 
-              <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '12px', marginBottom: 16, alignItems: 'end' }}>
                 <div className="form-group">
-                  <label htmlFor="expected-date">{t("expectedDate")} *</label>
+                  <label>Quantity Unit *</label>
                   <input
-                    id="expected-date"
+                    type="number"
+                    step="0.1"
+                    value={formUnitQuantity}
+                    onChange={(e) => setFormUnitQuantity(e.target.value)}
+                    className={formErrors.quantity ? "input-error" : ""}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Unit Type</label>
+                  <select
+                    value={formUnitType}
+                    onChange={(e) => setFormUnitType(e.target.value)}
+                    style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '12px', color: 'var(--text-primary)', width: '100%' }}
+                  >
+                    <option value="Piece">Piece</option>
+                    <option value="KG">KG</option>
+                    <option value="Carton">Carton</option>
+                    <option value="Shrenk">Shrenk</option>
+                    <option value="Box">Box</option>
+                    <option value="Bag">Bag</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Pcs/Unit</label>
+                  <input
+                    type="number"
+                    value={formPiecesPerUnit}
+                    onChange={(e) => setFormPiecesPerUnit(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="info-alert" style={{ marginBottom: 16, background: 'var(--accent-glow)', border: '1px solid var(--accent)', padding: '12px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Calculator size={18} color="var(--accent)" />
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  Total price (Calculated): <strong>{Math.round(Number(formUnitQuantity || 0) * Number(formPiecesPerUnit || 1))}</strong>
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
+                <div className="form-group">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Calendar size={14} /> Expected Delivery *
+                  </label>
+                  <input
                     type="date"
                     value={formExpectedDate}
                     onChange={(e) => setFormExpectedDate(e.target.value)}
@@ -393,13 +472,13 @@ export default function OrdersPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="order-qty">{t("quantity")} *</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Calendar size={14} /> Expiry Date (Optional)
+                  </label>
                   <input
-                    id="order-qty"
-                    type="number"
-                    value={formQuantity}
-                    onChange={(e) => setFormQuantity(e.target.value)}
-                    className={formErrors.quantity ? "input-error" : ""}
+                    type="date"
+                    value={formExpiryDate}
+                    onChange={(e) => setFormExpiryDate(e.target.value)}
                   />
                 </div>
               </div>

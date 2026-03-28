@@ -20,6 +20,7 @@ model Product {
   expiryDate    DateTime?
   batchNumber   String?
   unit          String     @default("Piece")
+  piecesPerUnit Int        @default(1)
   ignoreRestock Boolean    @default(false)
 
   createdAt     DateTime   @default(now())
@@ -65,17 +66,21 @@ model AuditLog {
 }
 
 model Order {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   productId    String
-  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   providerId   String?
   provider     Provider? @relation(fields: [providerId], references: [id])
   providerName String
   expectedDate DateTime
-  quantity     Int
+  expiryDate   DateTime? // Optional expiry for incoming stock
+  quantity     Int       // Total pieces (calculated)
+  unitType     String?   // e.g., "KG", "Carton", "Shrenk"
+  unitQuantity Float?    // Number of bulk units
+  piecesPerUnit Int?     // Number of pieces per bulk unit
   notes        String?
-  status       String   @default("PENDING")
-  createdAt    DateTime @default(now())
+  status       String    @default("PENDING")
+  createdAt    DateTime  @default(now())
   deletedAt    DateTime?
 }
 

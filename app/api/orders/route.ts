@@ -18,7 +18,17 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { productId, providerId, providerName, expectedDate, quantity, notes } = body;
+    const { 
+      productId, 
+      providerId, 
+      providerName, 
+      expectedDate, 
+      expiryDate,
+      unitQuantity, 
+      unitType, 
+      piecesPerUnit,
+      notes 
+    } = body;
     
     const errors: Record<string, string> = {};
 
@@ -26,9 +36,13 @@ export async function POST(request: NextRequest) {
     if (!providerName?.trim()) errors.providerName = "Provider name is required.";
     if (!expectedDate) errors.expectedDate = "Expected date is required.";
     
-    const qty = Number(quantity);
-    if (isNaN(qty) || !Number.isInteger(qty) || qty <= 0) {
-      errors.quantity = "Quantity must be a positive whole number.";
+    // Calculate total quantity (pieces)
+    const unitQty = Number(unitQuantity || 0);
+    const pPerUnit = Number(piecesPerUnit || 1);
+    const totalQty = Math.round(unitQty * pPerUnit);
+
+    if (totalQty <= 0) {
+      errors.quantity = "Total quantity must be a positive number.";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -41,10 +55,14 @@ export async function POST(request: NextRequest) {
         providerId: providerId || null,
         providerName: providerName.trim(),
         expectedDate: new Date(expectedDate),
-        quantity: qty,
+        expiryDate: expiryDate ? new Date(expiryDate) : null,
+        quantity: totalQty,
+        unitType: unitType || "Piece",
+        unitQuantity: unitQty,
+        piecesPerUnit: pPerUnit,
         notes: notes?.trim() || null,
         status: "PENDING",
-      },
+      } as any,
       include: {
         product: { select: { name: true } },
       },
@@ -55,7 +73,7 @@ export async function POST(request: NextRequest) {
         action: "CREATE",
         entity: "Order",
         entityId: order.id,
-        details: `Placed order for ${qty} of "${(order as any).product.name}" from ${order.providerName}`,
+        details: `Placed order for ${unitQty} ${unitType || 'units'} (${totalQty} total pieces) of "${(order as any).product.name}" from ${order.providerName}`,
       },
     });
 

@@ -288,11 +288,11 @@ export default function Home() {
       name: formName.trim(),
       sku: formSku.trim() || null,
       barcode: formBarcode.trim() || null,
-      quantity: qty,
+      quantity: 0, // Default to 0 as requested to simplify form
       price: Number(formPrice),
-      purchasePrice: Number(formPurchasePrice),
-      expiryDate: formExpiry || null,
-      unit: formUnit,
+      purchasePrice: 0, // Default to 0
+      expiryDate: null,
+      unit: "Piece", // Default unit
     });
 
 
@@ -721,48 +721,17 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 24 }}>
-                <div className="form-group">
-                  <label>Selling Price ($) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formPrice}
-                    onChange={(e) => setFormPrice(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Cost Price ($)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formPurchasePrice}
-                    onChange={(e) => setFormPurchasePrice(e.target.value)}
-                  />
-                </div>
+              <div className="form-group" style={{ marginBottom: 24 }}>
+                <label>Selling Price ($) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formPrice}
+                  onChange={(e) => setFormPrice(e.target.value)}
+                />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 24 }}>
-                <div className="form-group">
-                  <label>Quantity *</label>
-                  <input
-                    type="number"
-                    value={formQuantity}
-                    onChange={(e) => setFormQuantity(e.target.value)}
-                    className={formErrors.quantity ? "input-error" : ""}
-                  />
-                  {formErrors.quantity && <span className="error-text">{formErrors.quantity}</span>}
-                </div>
-                <div className="form-group">
-                  <label>Unit</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Piece, Box"
-                    value={formUnit}
-                    onChange={(e) => setFormUnit(e.target.value)}
-                  />
-                </div>
-              </div>
+
 
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={() => setShowAddForm(false)}>Cancel</button>

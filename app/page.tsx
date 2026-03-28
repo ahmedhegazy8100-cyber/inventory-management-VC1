@@ -77,6 +77,7 @@ export default function Home() {
   const [formBarcode, setFormBarcode] = useState("");
   const [formQuantity, setFormQuantity] = useState("0");
   const [formPrice, setFormPrice] = useState("0");
+  const [formPurchasePrice, setFormPurchasePrice] = useState("0");
   const [formExpiry, setFormExpiry] = useState("");
   const [formUnit, setFormUnit] = useState("Piece");
   const [formProviderId, setFormProviderId] = useState("");
@@ -91,6 +92,7 @@ export default function Home() {
   const [editBarcode, setEditBarcode] = useState("");
   const [editQuantity, setEditQuantity] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [editPurchasePrice, setEditPurchasePrice] = useState("");
   const [editExpiry, setEditExpiry] = useState("");
   const [editUnit, setEditUnit] = useState("Piece");
   const [editProviderId, setEditProviderId] = useState("");
@@ -210,6 +212,8 @@ export default function Home() {
       setFormName("");
       setFormSku("");
       setFormQuantity("0");
+      setFormPrice("0");
+      setFormPurchasePrice("0");
       setFormUnit("Piece");
       setFormProviderId("");
       setFormErrors({});
@@ -286,9 +290,9 @@ export default function Home() {
       barcode: formBarcode.trim() || null,
       quantity: qty,
       price: Number(formPrice),
+      purchasePrice: Number(formPurchasePrice),
       expiryDate: formExpiry || null,
       unit: formUnit,
-      providerId: formProviderId || null,
     });
 
 
@@ -302,6 +306,7 @@ export default function Home() {
     setEditBarcode(product.barcode || "");
     setEditQuantity(String(product.quantity));
     setEditPrice(String(product.price || 0));
+    setEditPurchasePrice(String(product.purchasePrice || 0));
     setEditExpiry(product.expiryDate ? new Date(product.expiryDate).toISOString().split('T')[0] : "");
     setEditUnit(product.unit || "Piece");
     setEditProviderId(product.providerId || "");
@@ -334,6 +339,7 @@ export default function Home() {
         barcode: editBarcode.trim() || null,
         quantity: qty,
         price: Number(editPrice),
+        purchasePrice: Number(editPurchasePrice),
         expiryDate: editExpiry || null,
         unit: editUnit,
         providerId: editProviderId || null,
@@ -717,6 +723,37 @@ export default function Home() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 24 }}>
                 <div className="form-group">
+                  <label>Selling Price ($) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formPrice}
+                    onChange={(e) => setFormPrice(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Cost Price ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formPurchasePrice}
+                    onChange={(e) => setFormPurchasePrice(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 24 }}>
+                <div className="form-group">
+                  <label>Quantity *</label>
+                  <input
+                    type="number"
+                    value={formQuantity}
+                    onChange={(e) => setFormQuantity(e.target.value)}
+                    className={formErrors.quantity ? "input-error" : ""}
+                  />
+                  {formErrors.quantity && <span className="error-text">{formErrors.quantity}</span>}
+                </div>
+                <div className="form-group">
                   <label>Unit</label>
                   <input
                     type="text"
@@ -724,19 +761,6 @@ export default function Home() {
                     value={formUnit}
                     onChange={(e) => setFormUnit(e.target.value)}
                   />
-                </div>
-                <div className="form-group">
-                  <label>Provider</label>
-                  <select
-                    value={formProviderId}
-                    onChange={(e) => setFormProviderId(e.target.value)}
-                    style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '11px', color: 'var(--text-primary)' }}
-                  >
-                    <option value="">Select Provider</option>
-                    {providerList.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
                 </div>
               </div>
 
@@ -817,6 +841,27 @@ export default function Home() {
                   className={editErrors.quantity ? "input-error" : ""}
                 />
                 {editErrors.quantity && <span className="error-text">{editErrors.quantity}</span>}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: 24 }}>
+              <div className="form-group">
+                <label>Selling Price ($) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label>Cost Price ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editPurchasePrice}
+                  onChange={(e) => setEditPurchasePrice(e.target.value)}
+                />
               </div>
             </div>
 

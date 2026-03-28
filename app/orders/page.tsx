@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "./../components/I18nProvider";
-import { AlertCircle, Truck, Package, X, CheckCircle2 } from "lucide-react";
+import { AlertCircle, Truck, Package, X, CheckCircle2, Plus } from "lucide-react";
 import "./../globals.css";
 
 interface Product {
@@ -41,8 +41,21 @@ export default function OrdersPage() {
   const [formProviderId, setFormProviderId] = useState("");
   const [formExpectedDate, setFormExpectedDate] = useState("");
   const [formQuantity, setFormQuantity] = useState("");
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [formNotes, setFormNotes] = useState("");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+
+  // Fetch all products for the manual dropdown
+  const { data: productsData } = useQuery({
+    queryKey: ["products-all"],
+    queryFn: async () => {
+      const res = await fetch("/api/products?limit=1000"); // Get all for dropdown
+      if (!res.ok) throw new Error("Failed to fetch products");
+      return res.json();
+    },
+  });
+  const allProducts = productsData?.data || [];
 
   // Fetch providers for the dropdown
   const { data: providerData } = useQuery({
@@ -116,7 +129,7 @@ export default function OrdersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders", "suggestions"] });
-      setActiveSuggestion(null);
+      setIsCreateModalOpen(false);
       showToast("Order placed successfully!");
     },
     onError: (err: any) => {
@@ -131,6 +144,8 @@ export default function OrdersPage() {
 
   const openOrderModal = (product: Product) => {
     setActiveSuggestion(product);
+    setSelectedProductId(product.id);
+    setFormProviderId("");
     setFormProviderName("");
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -138,14 +153,33 @@ export default function OrdersPage() {
     setFormQuantity("50");
     setFormNotes("");
     setFormErrors({});
+    setIsCreateModalOpen(true);
+  };
+
+  const openManualOrderModal = () => {
+    setActiveSuggestion(null);
+    setSelectedProductId("");
+    setFormProviderId("");
+    setFormProviderName("");
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    setFormExpectedDate(tomorrow.toISOString().split("T")[0]);
+    setFormQuantity("100");
+    setFormNotes("");
+    setFormErrors({});
+    setIsCreateModalOpen(true);
   };
 
   const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeSuggestion) return;
+    const finalProductId = activeSuggestion?.id || selectedProductId;
+    if (!finalProductId) {
+      showToast("Please select a product.", "error");
+      return;
+    }
 
     const errors: FormErrors = {};
-    if (!formProviderName.trim()) errors.providerName = "Provider name is required.";
+    if (!formProviderId) errors.providerName = "Provider is required.";
     if (!formExpectedDate) errors.expectedDate = "Expected date is required.";
     
     const qty = Number(formQuantity);
@@ -159,7 +193,7 @@ export default function OrdersPage() {
     }
 
     placeOrderMutation.mutate({
-      productId: activeSuggestion.id,
+      productId: finalProductId,
       providerId: formProviderId,
       providerName: formProviderName.trim(),
       expectedDate: formExpectedDate,
@@ -170,7 +204,7 @@ export default function OrdersPage() {
 
   return (
     <div className="page-fade-in">
-      <header className="page-header">
+      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Truck size={28} color="var(--accent)" />
@@ -178,6 +212,9 @@ export default function OrdersPage() {
           </h1>
           <p className="text-secondary">{t("manageShipments") || "Track and restock your inventory"}</p>
         </div>
+        <button className="btn-add" onClick={openManualOrderModal} style={{ marginTop: 0 }}>
+          <Plus size={18} /> {isRTL ? "إنشاء طلب" : "Create Order"}
+        </button>
       </header>
 
       {/* Suggestions Section */}
@@ -299,15 +336,28 @@ export default function OrdersPage() {
       </div>
 
       {/* Order Modal */}
-      {activeSuggestion && (
-        <div className="modal-overlay" onClick={() => setActiveSuggestion(null)}>
+      {isCreateModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsCreateModalOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>{t("placeOrder")}</h3>
+            <h3>{activeSuggestion ? t("placeOrder") : (isRTL ? "إنشاء طلب جديد" : "Create New Order")}</h3>
             
             <form onSubmit={handleOrderSubmit}>
               <div className="form-group" style={{ marginBottom: 16 }}>
-                <label>{t("product") || "Product"}</label>
-                <input type="text" value={activeSuggestion.name} disabled style={{ opacity: 0.6 }} />
+                <label>{t("product") || "Product"} *</label>
+                {activeSuggestion ? (
+                  <input type="text" value={activeSuggestion.name} disabled style={{ opacity: 0.6 }} />
+                ) : (
+                  <select
+                    value={selectedProductId}
+                    onChange={(e) => setSelectedProductId(e.target.value)}
+                    style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '12px', color: 'var(--text-primary)', width: '100%' }}
+                  >
+                    <option value="">-- Select Product --</option>
+                    {allProducts.map((p: any) => (
+                      <option key={p.id} value={p.id}>{p.name} {p.sku ? `(${p.sku})` : ""}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="form-group" style={{ marginBottom: 16 }}>
@@ -366,7 +416,7 @@ export default function OrdersPage() {
               </div>
 
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setActiveSuggestion(null)}>{t("cancel")}</button>
+                <button type="button" className="btn-cancel" onClick={() => setIsCreateModalOpen(false)}>{t("cancel")}</button>
                 <button type="submit" className="btn-save" disabled={placeOrderMutation.isPending}>
                   {placeOrderMutation.isPending ? "..." : t("submitOrder")}
                 </button>

@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "./../components/I18nProvider";
-import { AlertCircle, Truck, Package, X, CheckCircle2, Plus, Calculator, Calendar } from "lucide-react";
+import { AlertCircle, Truck, Package, X, CheckCircle2, Plus, Calculator, Calendar, DollarSign, TrendingUp } from "lucide-react";
 import "./../globals.css";
 import { SearchableSelect } from "./../components/SearchableSelect";
+import { calculateUnitCost } from "./../../lib/normalization";
 
 interface Product {
   id: string;
@@ -51,6 +52,7 @@ export default function OrdersPage() {
   const [formUnitQuantity, setFormUnitQuantity] = useState("1");
   const [formUnitType, setFormUnitType] = useState("Piece");
   const [formPiecesPerUnit, setFormPiecesPerUnit] = useState("1");
+  const [formTotalCost, setFormTotalCost] = useState("0");
   const [selectedProductId, setSelectedProductId] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [formNotes, setFormNotes] = useState("");
@@ -164,6 +166,7 @@ export default function OrdersPage() {
     setFormUnitQuantity("1");
     setFormUnitType(product.unit || "Piece");
     setFormPiecesPerUnit(String((product as any).piecesPerUnit || 1));
+    setFormTotalCost("0");
     setFormNotes("");
     setFormErrors({});
     setIsCreateModalOpen(true);
@@ -181,6 +184,7 @@ export default function OrdersPage() {
     setFormUnitQuantity("1");
     setFormUnitType("Piece");
     setFormPiecesPerUnit("1");
+    setFormTotalCost("0");
     setFormNotes("");
     setFormErrors({});
     setIsCreateModalOpen(true);
@@ -217,6 +221,7 @@ export default function OrdersPage() {
       unitQuantity: unitQty,
       unitType: formUnitType,
       piecesPerUnit: Number(formPiecesPerUnit),
+      totalCost: Number(formTotalCost),
       notes: formNotes.trim(),
     });
   };
@@ -452,11 +457,40 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="info-alert" style={{ marginBottom: 16, background: 'var(--accent-glow)', border: '1px solid var(--accent)', padding: '12px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Calculator size={18} color="var(--accent)" />
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                  Total price (Calculated): <strong>{Math.round(Number(formUnitQuantity || 0) * Number(formPiecesPerUnit || 1))}</strong>
-                </span>
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label>Total Order Cost ($) *</label>
+                <div style={{ position: 'relative' }}>
+                  <DollarSign size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input
+                    type="number"
+                    step="0.01"
+                    style={{ paddingLeft: '36px' }}
+                    value={formTotalCost}
+                    onChange={(e) => setFormTotalCost(e.target.value)}
+                    placeholder="Enter total price for this order"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '12px', marginBottom: 16 }}>
+                <div className="info-alert" style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-color)', padding: '12px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Calculator size={18} color="var(--text-muted)" />
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Pieces</span>
+                    <span style={{ fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                      {Math.round(Number(formUnitQuantity || 0) * Number(formPiecesPerUnit || 1))}
+                    </span>
+                  </div>
+                </div>
+                <div className="info-alert" style={{ background: 'var(--accent-glow)', border: '1px solid var(--accent)', padding: '12px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <TrendingUp size={18} color="var(--accent)" />
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--accent)', textTransform: 'uppercase', fontWeight: 600 }}>Est. Unit Cost</span>
+                    <span style={{ fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                      ${calculateUnitCost(Number(formTotalCost || 0), Number(formUnitQuantity || 0), Number(formPiecesPerUnit || 1)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>

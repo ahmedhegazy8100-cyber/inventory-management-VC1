@@ -78,6 +78,7 @@ model Order {
   unitType     String?   // e.g., "KG", "Carton", "Shrenk"
   unitQuantity Float?    // Number of bulk units
   piecesPerUnit Int?     // Number of pieces per bulk unit
+  totalCost    Float     @default(0) // Total procurement cost
   notes        String?
   status       String    @default("PENDING")
   createdAt    DateTime  @default(now())

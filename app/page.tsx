@@ -14,7 +14,9 @@ import {
   Archive, 
   Folder,
   LayoutDashboard,
-  LogOut
+  LogOut,
+  DollarSign,
+  Package
 } from "lucide-react";
 
 
@@ -456,6 +458,15 @@ export default function Home() {
             <div className="metric-label">{t("expProfit") || "Exp. Profit"}</div>
             <div className="metric-value">${stats?.expectedProfit?.toFixed(2) || "0.00"}</div>
             <p className="metric-subtext">On current stock</p>
+          </div>
+        </div>
+
+        <div className="card bento-card metric-warning">
+          <div className="bento-icon"><DollarSign size={32} /></div>
+          <div>
+            <div className="metric-label">Total Revenue</div>
+            <div className="metric-value">${stats?.totalPotentialRevenue?.toFixed(2) || "0.00"}</div>
+            <p className="metric-subtext">If all items sold</p>
           </div>
         </div>
       </div>

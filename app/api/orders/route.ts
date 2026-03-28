@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { orderCreateSchema } from "@/lib/schemas";
+import { calculateUnitCost } from "@/lib/normalization";
 
 export async function GET() {
   try {
@@ -18,6 +20,16 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const validation = orderCreateSchema.safeParse(body);
+
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.issues.forEach((issue) => {
+        errors[String(issue.path[0])] = issue.message;
+      });
+      return NextResponse.json({ errors }, { status: 400 });
+    }
+
     const { 
       productId, 
       providerId, 
@@ -27,58 +39,68 @@ export async function POST(request: NextRequest) {
       unitQuantity, 
       unitType, 
       piecesPerUnit,
+      totalCost,
       notes 
-    } = body;
+    } = validation.data;
     
-    const errors: Record<string, string> = {};
+    // Normalization Logic: Calculate Unit Cost
+    const unitCost = calculateUnitCost(totalCost, unitQuantity, piecesPerUnit);
+    const totalQty = Math.round(unitQuantity * piecesPerUnit);
 
-    if (!productId) errors.productId = "Product ID is required.";
-    if (!providerName?.trim()) errors.providerName = "Provider name is required.";
-    if (!expectedDate) errors.expectedDate = "Expected date is required.";
-    
-    // Calculate total quantity (pieces)
-    const unitQty = Number(unitQuantity || 0);
-    const pPerUnit = Number(piecesPerUnit || 1);
-    const totalQty = Math.round(unitQty * pPerUnit);
-
-    if (totalQty <= 0) {
-      errors.quantity = "Total quantity must be a positive number.";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      return NextResponse.json({ errors }, { status: 400 });
-    }
-
-    const order = await prisma.order.create({
-      data: {
-        productId,
-        providerId: providerId || null,
-        providerName: providerName.trim(),
-        expectedDate: new Date(expectedDate),
-        expiryDate: expiryDate ? new Date(expiryDate) : null,
-        quantity: totalQty,
-        unitType: unitType || "Piece",
-        unitQuantity: unitQty,
-        piecesPerUnit: pPerUnit,
-        notes: notes?.trim() || null,
-        status: "PENDING",
-      } as any,
-      include: {
-        product: { select: { name: true } },
-      },
+    // Get current product state for Audit Log
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { name: true, purchasePrice: true }
     });
 
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    // Transaction: Create Order and Update Product Purchase Price
+    const order = await prisma.$transaction(async (tx) => {
+      const newOrder = await tx.order.create({
+        data: {
+          productId,
+          providerId: providerId || null,
+          providerName,
+          expectedDate,
+          expiryDate: expiryDate || null,
+          quantity: totalQty,
+          unitType,
+          unitQuantity,
+          piecesPerUnit,
+          totalCost,
+          notes,
+          status: "PENDING",
+        } as any,
+        include: {
+          product: { select: { name: true } },
+        },
+      });
+
+      // Update the product's latest purchase price (normalized unit cost)
+      await tx.product.update({
+        where: { id: productId },
+        data: { purchasePrice: unitCost }
+      });
+
+      return newOrder;
+    });
+
+    // Audit Log: Track cost fluctuation
     await prisma.auditLog.create({
       data: {
-        action: "CREATE",
-        entity: "Order",
-        entityId: order.id,
-        details: `Placed order for ${unitQty} ${unitType || 'units'} (${totalQty} total pieces) of "${(order as any).product.name}" from ${order.providerName}`,
+        action: "UPDATE_PRICE",
+        entity: "Product",
+        entityId: productId,
+        details: `Procurement cost for "${product.name}" updated from $${product.purchasePrice.toFixed(2)} to $${unitCost.toFixed(2)} based on order of ${unitQuantity} ${unitType}.`,
       },
     });
 
     return NextResponse.json(order, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error("Order creation error:", error);
     return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
   }
 }

@@ -49,6 +49,7 @@ export function ProductTable({
             <th>{t("name")}</th>
             <th>{t("barcode") || "Barcode"}</th>
             <th>{t("price") || "Price"}</th>
+            <th>Margin</th>
             <th>{t("provider") || "Provider"}</th>
             <th>{t("quantity")}</th>
 
@@ -62,6 +63,20 @@ export function ProductTable({
               <td className="product-name">{product.name}</td>
               <td className="product-sku">{product.barcode || product.sku || "—"}</td>
               <td className="product-price font-bold">${(product.price || 0).toFixed(2)}</td>
+              <td>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <span style={{ 
+                    fontSize: '13px', 
+                    fontWeight: 600, 
+                    color: product.profitMargin >= 30 ? '#10b981' : product.profitMargin >= 10 ? '#f59e0b' : '#ef4444' 
+                  }}>
+                    {product.profitMargin?.toFixed(1)}%
+                  </span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    +${product.grossProfit?.toFixed(2)}/pc
+                  </span>
+                </div>
+              </td>
               <td className="text-secondary" style={{ fontSize: '13px' }}>{product.provider?.name || "—"}</td>
 
 

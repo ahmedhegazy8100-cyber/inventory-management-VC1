@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/schemas";
+import { getProfitStats } from "@/lib/normalization";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -35,8 +36,18 @@ export async function GET(request: NextRequest) {
     prisma.product.count({ where }),
   ]);
 
+  // Inject computed fields (Gross Profit & Margin)
+  const enrichedProducts = products.map((p) => {
+    const stats = getProfitStats(p.price, p.purchasePrice);
+    return {
+      ...p,
+      grossProfit: stats.grossProfit,
+      profitMargin: stats.marginPercentage,
+    };
+  });
+
   return NextResponse.json({
-    data: products,
+    data: enrichedProducts,
     meta: {
       total,
       page,

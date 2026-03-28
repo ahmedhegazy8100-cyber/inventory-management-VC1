@@ -30,3 +30,16 @@ export const providerSchema = z.object({
   phone: z.string().trim().nullable().optional(),
   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
 });
+
+export const orderCreateSchema = z.object({
+  productId: z.string().uuid("Product ID is required."),
+  providerId: z.string().uuid("Provider ID is required.").nullable().optional(),
+  providerName: z.string().trim().min(1, "Provider name is required."),
+  expectedDate: z.coerce.date(),
+  expiryDate: z.coerce.date().nullable().optional(),
+  unitQuantity: z.number().positive("Quantity must be positive."),
+  unitType: z.string().trim().default("Piece"),
+  piecesPerUnit: z.number().int().positive("Pieces per unit must be at least 1.").default(1),
+  totalCost: z.number().nonnegative("Total cost cannot be negative.").default(0),
+  notes: z.string().trim().nullable().optional(),
+});

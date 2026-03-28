@@ -75,12 +75,14 @@ export default function AuditLogsPage() {
                   borderRadius: 'var(--radius-sm)',
                   background: log.action === 'CREATE' ? 'rgba(34, 197, 94, 0.1)' : 
                               log.action === 'UPDATE' ? 'rgba(59, 130, 246, 0.1)' : 
+                              log.action === 'UPDATE_PRICE' ? 'rgba(16, 185, 129, 0.1)' :
                               'rgba(239, 68, 68, 0.1)',
                   color: log.action === 'CREATE' ? 'var(--success)' : 
                          log.action === 'UPDATE' ? 'var(--accent)' : 
+                         log.action === 'UPDATE_PRICE' ? '#10b981' :
                          'var(--danger)'
                 }}>
-                  {log.action}
+                  {log.action.replace('_', ' ')}
                 </span>
                 <span className="audit-details" style={{ flex: 1, color: 'var(--text-primary)', fontSize: '0.95rem' }}>
                   {log.details}

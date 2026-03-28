@@ -1,6 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { productUpdateSchema } from "@/lib/schemas";
+import { getProfitStats } from "@/lib/normalization";
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { provider: true },
+    });
+
+    if (!product || product.deletedAt) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    const stats = getProfitStats(product.price, product.purchasePrice);
+    return NextResponse.json({
+      ...product,
+      grossProfit: stats.grossProfit,
+      profitMargin: stats.marginPercentage,
+    });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to fetch product" }, { status: 500 });
+  }
+}
 
 export async function PUT(
   request: NextRequest,
@@ -127,7 +154,12 @@ export async function PUT(
       }
     }
 
-    return NextResponse.json(product);
+    const stats = getProfitStats(product.price, product.purchasePrice);
+    return NextResponse.json({
+      ...product,
+      grossProfit: stats.grossProfit,
+      profitMargin: stats.marginPercentage,
+    });
   } catch {
     return NextResponse.json(
       { errors: { id: "Product not found." } },

@@ -13,6 +13,7 @@ model Product {
   name          String
   sku           String?
   barcode       String?    @unique
+  unitBarcode   String?    @unique
   quantity      Int        @default(0)
   targetQuantity Int       @default(100)
   price         Float      @default(0)

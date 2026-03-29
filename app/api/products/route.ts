@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
           OR: [
             { name: { contains: search, mode: "insensitive" as const } },
             { sku: { contains: search, mode: "insensitive" as const } },
+            { barcode: { contains: search, mode: "insensitive" as const } },
+            { unitBarcode: { contains: search, mode: "insensitive" as const } },
           ],
         }
       : {}),
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ errors }, { status: 400 });
   }
 
-  const { name, sku, quantity, barcode, price, purchasePrice, expiryDate, batchNumber, targetQuantity, unit, providerId } = validation.data;
+  const { name, sku, quantity, barcode, unitBarcode, price, purchasePrice, expiryDate, batchNumber, targetQuantity, unit, providerId } = validation.data;
 
 
   const product = await prisma.product.create({
@@ -77,6 +79,7 @@ export async function POST(request: NextRequest) {
       name,
       sku: sku || null,
       barcode: barcode || null,
+      unitBarcode: unitBarcode || null,
       quantity,
       price: price || 0,
       purchasePrice: purchasePrice || 0,

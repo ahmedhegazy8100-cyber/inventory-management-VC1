@@ -46,7 +46,7 @@ export async function PUT(
     return NextResponse.json({ errors }, { status: 400 });
   }
 
-  const { name, sku, quantity, barcode, price, purchasePrice, expiryDate, batchNumber, targetQuantity, unit, providerId } = validation.data;
+  const { name, sku, quantity, barcode, unitBarcode, price, purchasePrice, expiryDate, batchNumber, targetQuantity, unit, providerId } = validation.data;
 
 
 
@@ -64,6 +64,7 @@ export async function PUT(
     if (name !== undefined) data.name = name.trim();
     if (sku !== undefined) data.sku = sku?.trim() || null;
     if (barcode !== undefined) data.barcode = barcode?.trim() || null;
+    if (unitBarcode !== undefined) data.unitBarcode = unitBarcode?.trim() || null;
     if (quantity !== undefined) data.quantity = Number(quantity);
     if (price !== undefined) data.price = Number(price);
     if (purchasePrice !== undefined) data.purchasePrice = Number(purchasePrice);
@@ -93,6 +94,9 @@ export async function PUT(
     }
     if (barcode !== undefined && existing.barcode !== product.barcode) {
       changes.push(`barcode "${existing.barcode || "—"}" → "${product.barcode || "—"}"`);
+    }
+    if (unitBarcode !== undefined && existing.unitBarcode !== product.unitBarcode) {
+      changes.push(`unitBarcode "${existing.unitBarcode || "—"}" → "${product.unitBarcode || "—"}"`);
     }
     if (price !== undefined && existing.price !== product.price) {
       changes.push(`price ${existing.price} → ${product.price}`);

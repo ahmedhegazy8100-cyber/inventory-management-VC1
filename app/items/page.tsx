@@ -33,6 +33,7 @@ export default function ItemsPage() {
   const [formName, setFormName] = useState("");
   const [formSku, setFormSku] = useState("");
   const [formBarcode, setFormBarcode] = useState("");
+  const [formUnitBarcode, setFormUnitBarcode] = useState("");
   const [formPrice, setFormPrice] = useState("0");
   const [formUnit, setFormUnit] = useState("Piece");
   const [formErrors, setFormErrors] = useState<any>({});
@@ -42,6 +43,8 @@ export default function ItemsPage() {
   const [editSku, setEditSku] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editPurchasePrice, setEditPurchasePrice] = useState("");
+  const [editBarcode, setEditBarcode] = useState("");
+  const [editUnitBarcode, setEditUnitBarcode] = useState("");
   const [editUnit, setEditUnit] = useState("Piece");
   const [editProviderId, setEditProviderId] = useState("");
   const [editErrors, setEditErrors] = useState<any>({});
@@ -99,7 +102,11 @@ export default function ItemsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setShowAddForm(false);
-      setFormName(""); setFormSku(""); setFormBarcode(""); setFormPrice("0");
+      setFormName(""); 
+      setFormSku(""); 
+      setFormBarcode(""); 
+      setFormUnitBarcode("");
+      setFormPrice("0");
     },
     onError: (err: any) => setFormErrors(err),
   });
@@ -127,6 +134,8 @@ export default function ItemsPage() {
     setEditSku(product.sku || "");
     setEditPrice(String(product.price || 0));
     setEditPurchasePrice(String(product.purchasePrice || 0));
+    setEditBarcode(product.barcode || "");
+    setEditUnitBarcode(product.unitBarcode || "");
     setEditUnit(product.unit || "Piece");
     setEditProviderId(product.providerId || "");
     setEditErrors({});
@@ -149,7 +158,7 @@ export default function ItemsPage() {
             <LayoutDashboard size={18} /> Dashboard
           </Link>
           <button onClick={() => setShowAddForm(true)} className="btn-add" style={{ marginTop: 0 }}>
-            <Plus size={18} /> Add Master Item
+            <Plus size={18} /> Add Item
           </button>
         </div>
       </header>
@@ -198,7 +207,17 @@ export default function ItemsPage() {
         <div className="modal-overlay" onClick={() => setShowAddForm(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3 style={{ marginBottom: '24px' }}>Create Master Catalog Entry</h3>
-            <form onSubmit={(e) => { e.preventDefault(); addMutation.mutate({ name: formName, sku: formSku, price: Number(formPrice), unit: formUnit }); }}>
+            <form onSubmit={(e) => { 
+                e.preventDefault(); 
+                addMutation.mutate({ 
+                  name: formName, 
+                  sku: formSku, 
+                  price: Number(formPrice), 
+                  unit: formUnit,
+                  barcode: formBarcode,
+                  unitBarcode: formUnitBarcode
+                }); 
+              }}>
               <div className="form-group" style={{ marginBottom: 16 }}>
                 <label>Item Name *</label>
                 <input value={formName} onChange={e => setFormName(e.target.value)} className={formErrors.name ? "input-error" : ""} />
@@ -208,10 +227,28 @@ export default function ItemsPage() {
                 <label>SKU (Alphanumeric)</label>
                 <input value={formSku} onChange={e => setFormSku(e.target.value)} />
               </div>
-              <div className="form-group" style={{ marginBottom: 24 }}>
-                <label>Standard Selling Price ($)</label>
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label>Selling Price ($) *</label>
                 <input type="number" step="0.01" value={formPrice} onChange={e => setFormPrice(e.target.value)} />
               </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
+                <div className="form-group">
+                  <label>Barcode per unit [Cartoon, Shrank, etc]</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input value={formUnitBarcode} onChange={e => setFormUnitBarcode(e.target.value)} style={{ flex: 1 }} />
+                    <button type="button" onClick={() => setFormUnitBarcode(Math.random().toString().slice(2, 11))} className="qty-btn" style={{ borderRadius: '6px' }}>Gen</button>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Barcode per piece [1 Piece, 1KG, etc]</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input value={formBarcode} onChange={e => setFormBarcode(e.target.value)} style={{ flex: 1 }} />
+                    <button type="button" onClick={() => setFormBarcode(Math.random().toString().slice(2, 11))} className="qty-btn" style={{ borderRadius: '6px' }}>Gen</button>
+                  </div>
+                </div>
+              </div>
+
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={() => setShowAddForm(false)}>Cancel</button>
                 <button type="submit" className="btn-save">Save Master Record</button>
@@ -226,7 +263,8 @@ export default function ItemsPage() {
         <div className="modal-overlay" onClick={() => setEditProduct(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3 style={{ marginBottom: '24px' }}>Update Record: {editProduct.name}</h3>
-            <div className="form-group" style={{ marginBottom: 16 }}>
+            ...
+    <div className="form-group" style={{ marginBottom: 16 }}>
               <label>Item Name</label>
               <input value={editName} onChange={e => setEditName(e.target.value)} />
             </div>
@@ -240,9 +278,36 @@ export default function ItemsPage() {
                 <input type="number" step="0.01" value={editPrice} onChange={e => setEditPrice(e.target.value)} />
               </div>
             </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: 24 }}>
+              <div className="form-group">
+                <label>Barcode per unit [Cartoon, Shrank, etc]</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input value={editUnitBarcode} onChange={e => setEditUnitBarcode(e.target.value)} style={{ flex: 1 }} />
+                  <button type="button" onClick={() => setEditUnitBarcode(Math.random().toString().slice(2, 11))} className="qty-btn" style={{ borderRadius: '6px' }}>Gen</button>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Barcode per piece [1 Piece, 1KG, etc]</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input value={editBarcode} onChange={e => setEditBarcode(e.target.value)} style={{ flex: 1 }} />
+                  <button type="button" onClick={() => setEditBarcode(Math.random().toString().slice(2, 11))} className="qty-btn" style={{ borderRadius: '6px' }}>Gen</button>
+                </div>
+              </div>
+            </div>
+
             <div className="modal-actions">
               <button className="btn-cancel" onClick={() => setEditProduct(null)}>Cancel</button>
-              <button className="btn-save" onClick={() => updateMutation.mutate({ id: editProduct.id, data: { name: editName, sku: editSku, price: Number(editPrice) } })}>Update Record</button>
+              <button className="btn-save" onClick={() => updateMutation.mutate({ 
+                id: editProduct.id, 
+                data: { 
+                  name: editName, 
+                  sku: editSku, 
+                  price: Number(editPrice),
+                  barcode: editBarcode,
+                  unitBarcode: editUnitBarcode
+                } 
+              })}>Update Record</button>
             </div>
           </div>
         </div>

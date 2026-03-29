@@ -7,6 +7,7 @@ export const productSchema = z.object({
     .regex(/^[a-zA-Z0-9-]+$/, "SKU must be alphanumeric (dashes allowed)")
     .nullable().optional(),
   barcode: z.string().trim().nullable().optional(),
+  unitBarcode: z.string().trim().nullable().optional(),
   quantity: z.number().int().nonnegative("Quantity must be a non-negative whole number."),
   price: z.number().nonnegative("Price must be a non-negative number.").default(0),
   purchasePrice: z.number().nonnegative("Purchase price must be a non-negative number.").default(0),

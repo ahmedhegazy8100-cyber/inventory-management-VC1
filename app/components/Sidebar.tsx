@@ -17,7 +17,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const { t, isRTL } = useI18n();
 
   const navItems = [
-    { name: t("inventory") || "Inventory", href: "/", icon: <Package size={18} /> },
+    { name: t("inventory") || "Inventory", href: "/inventory", icon: <Package size={18} /> },
     { name: t("orders") || "Orders", href: "/orders", icon: <Truck size={18} /> },
     { name: t("providers") || "Providers", href: "/providers", icon: <Users size={18} /> },
     { name: t("auditLogs") || "Audit Logs", href: "/audit-logs", icon: <ClipboardList size={18} /> },
